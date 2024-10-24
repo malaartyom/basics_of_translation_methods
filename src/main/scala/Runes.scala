@@ -1,10 +1,11 @@
 import scala.util.matching.Regex
 
 case object Runes {
-  private val SHORT_ESCAPE:          Regex = """\\0|\\a|\\b|\\r|\\n|\\t|\\v|\\'|\\"|\\\\ """.r
-  private val UNICODE_ESCAPE:        Regex = """\\u[0-9A-Fa-f]{4,5}""".r
-  val ESCAPE:                        Regex = (SHORT_ESCAPE.regex + "|" + UNICODE_ESCAPE.regex).r
-  private val SIMPLE_RUNE_CHARACTER: Regex = """[\\'\r\n]""".r
-  private val RUNE_CHARACTER:        Regex = (SIMPLE_RUNE_CHARACTER.regex + "|" + ESCAPE).r
-  val RUNE:                          Regex = ("\'" + RUNE_CHARACTER.regex + "\'").r
+  private val RUNE_CHAR = "'"
+  private val SHORT_ESCAPE = """\\[0abfnrtv"\\]"""
+  private val UNICODE_ESCAPE = """\\u[0-9a-fA-F]{4}|\\U\+[0-9a-fA-F]{4,5}"""
+  val ESCAPE = s"($SHORT_ESCAPE|$UNICODE_ESCAPE)"
+  private val SIMPLE_RUNE_CHARACTER = """[^'\\\r\n]"""
+  private val RUNE_CHARACTER = s"($SIMPLE_RUNE_CHARACTER|$ESCAPE)"
+  val RUNE: Regex = s"$RUNE_CHAR$RUNE_CHARACTER$RUNE_CHAR".r
 }

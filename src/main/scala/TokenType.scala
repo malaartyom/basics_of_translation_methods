@@ -1,3 +1,17 @@
 enum TokenType {
-  case Bad, BooleanLiteral, Identifier, Indentation, IntegralLiteral, HardKeyword, SoftKeyword, RuneLiteral, StringLiteral, Symbol
+  case
+  Bad,
+  BooleanLiteral,
+  Identifier,
+  Indentation,
+  IntegerLiteral,
+  HardKeyword,
+  SoftKeyword,
+  RuneLiteral,
+  StringLiteral,
+  Symbol
 }
+
+
+
+

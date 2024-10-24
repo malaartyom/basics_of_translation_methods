@@ -34,6 +34,8 @@ case object Keywords {
 
   def isSoftKeyword(s: String): Boolean = SoftKeywords.contains(s)
 
+  def isKeyword(s: String): Boolean = isSoftKeyword(s) || isHardKeyword(s)
+
   def getHardKeyword(s: String): Keyword = HardKeywords(s)
 
   def getSoftKeyword(s: String): Keyword = SoftKeywords(s)

@@ -36,7 +36,15 @@ case object Symbols {
     "!=" -> Symbol.EXCLAMATION_EQUALS,
     "<:" -> Symbol.BOUND
   )
+  def isShortSymbol(s: String): Boolean = shortSymbols.contains(s)
 
-  def isSymbol(currentPoint: Char, nextPoint: Char): Boolean =
-    longSymbols.contains(currentPoint.toString + nextPoint.toString) || shortSymbols.contains(currentPoint.toString)
+  def isLongSymbol(s: String): Boolean =
+    longSymbols.contains(s)
+
+  def getSymbol(symbol: String): Symbol = {
+    if (symbol.length == 2) {
+      return longSymbols(symbol)
+    }
+    shortSymbols(symbol)
+  }
 }
