@@ -1,8 +1,8 @@
 import Boolean.BOOLEAN
 import Integer.INTEGER
 import Integer.INT_SUFFIX
-import Runes.RUNE
-import StringLiteral.STRING
+import Runes.{RUNE, RUNE_CHAR, RUNE_CHARACTER, RUNE_INTERIOR}
+import StringLiteral.{STRING, STRING_INTERIOR, STRING_START}
 import syspro.tm.lexer.BuiltInType
 
 case object LiteralTokens {
@@ -11,13 +11,17 @@ case object LiteralTokens {
 
   def isInteger(s: String): Boolean = INTEGER.matches(s)
 
-  def isRune(s: String): Boolean = RUNE.matches(s)
+  def isStringInterior(s: String): Boolean = STRING_INTERIOR.matches(s)
 
-  def isString(s: String): Boolean = STRING.matches(s)
+  def isRuneInterior(s: String): Boolean = RUNE_INTERIOR.matches(s)
 
   def isSuffix(s: String): Boolean = INT_SUFFIX.matches(s)
 
-  def hasSuffix(s: String): Boolean  = INT_SUFFIX.matches(s.slice(s.length - 3, s.length))
+  def hasSuffix(s: String): Boolean = INT_SUFFIX.matches(s.slice(s.length - 3, s.length))
+
+  def isStringStart(s: String): Boolean = STRING_START.matches(s)
+
+  def isRuneStart(s: String): Boolean = RUNE_CHAR.matches(s)
 
   def getSuffix(s: String, hasSuffix: Boolean): BuiltInType = {
     if (!hasSuffix) return BuiltInType.INT64
@@ -26,7 +30,8 @@ case object LiteralTokens {
       case "i32" => BuiltInType.INT32
       case "i64" => BuiltInType.INT64
       case "u32" => BuiltInType.UINT32
-      case "u64" => BuiltInType.UINT64}
+      case "u64" => BuiltInType.UINT64
+    }
   }
 
   def getInt(s: String, hasSuffix: Boolean): Long =

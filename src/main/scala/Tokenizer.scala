@@ -2,13 +2,11 @@ import Keywords.{getHardKeyword, getSoftKeyword, isHardKeyword, isKeyword, isSof
 import PrimitiveTokens.{isIdentifier, isTrivia}
 import TokenType.*
 import syspro.tm.lexer.{IdentifierToken, KeywordToken, Lexer, Token}
-import LiteralTokens._
+import LiteralTokens.*
+import Runes.{RUNE_CHAR, RUNE_CHARACTER}
 
 import java.util
 import Symbols.*
-
-
-
 
 
 case class Tokenizer() extends Lexer {
@@ -21,11 +19,6 @@ case class Tokenizer() extends Lexer {
 
 
     while (idx < s.length) {
-//      println(idx)
-//      println(tokens.tokens)
-//      println(tokens.comment)
-//      println(tokens.sb)
-
       current_char = s(idx)
       next_char = lookup(s, idx + 1)
       tokens.addChar(current_char)
@@ -53,15 +46,31 @@ case class Tokenizer() extends Lexer {
         tokens.add(idx - 1, IntegerLiteral)
         tokens.updateState()
       }
-      else if (tokens.isStringStarted()) {
-        val extractedString: String = extractString(idx, s)
-        idx += extractedString.length + 1
+      else if (isRuneStart(tokens.sb)) {
+        val extractedRuneInterior: String = extractRune(idx, s)
+        idx += extractedRuneInterior.length + 1
         tokens.updateState()
-        tokens.addString(extractedString)
-        tokens.add(idx, StringLiteral)
+        tokens.addString(extractedRuneInterior)
+        if (!isRuneInterior(extractedRuneInterior)) {
+          tokens.add(idx - 1, Bad)
+        } else {
+          tokens.add(idx - 1, RuneLiteral)
+        }
         tokens.updateState()
       }
-      else if (isKeyword(tokens.sb) && !isKeyword(tokens.sb + next_char) && !isIdentifier(tokens.sb + next_char)|| idx == s.length) {
+      else if (isStringStart(tokens.sb)) {
+        val extractedStringInterior: String = extractString(idx, s)
+        idx += extractedStringInterior.length + 1
+        tokens.updateState()
+        tokens.addString(extractedStringInterior)
+        if (!isStringInterior(extractedStringInterior)) {
+          tokens.add(idx, Bad)
+        } else {
+          tokens.add(idx, StringLiteral)
+        }
+        tokens.updateState()
+      }
+      else if (isKeyword(tokens.sb) && !isKeyword(tokens.sb + next_char) && !isIdentifier(tokens.sb + next_char) || idx == s.length) {
         if (isHardKeyword(tokens.sb)) {
           tokens.add(idx - 1, HardKeyword)
           tokens.updateState()
@@ -95,8 +104,17 @@ case class Tokenizer() extends Lexer {
       extractedString += s(idx)
       idx += 1
     }
-    extractedString
+    return extractedString
+  }
 
+  private def extractRune(i: Int, s: String): String = {
+    var idx: Int = i
+    var extractedRune = ""
+    while (s(idx) != "'"(0)) {
+      extractedRune += s(idx)
+      idx += 1
+    }
+    return extractedRune
   }
 
 
