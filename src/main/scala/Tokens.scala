@@ -8,13 +8,13 @@ import LiteralTokens._
 
 case class Tokens() {
   var tokens = new util.ArrayList[Token]()
-  private var start_idx = 0
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
   private var comment = ""
   private var commentStart = false
-  private var stringStart = false
+
   var sb = ""
+
 
   def updateState(): Unit = {
     // TODO: DO some fixes in update State
@@ -22,11 +22,11 @@ case class Tokens() {
     // TODO: Think about trivia len
     trailing_trivia_length = leading_trivia_length
     leading_trivia_length = 0
-    stringStart = false
     commentStart = false
   }
 
   def addChar(char: Char): Unit = {
+
     if (isComment(comment) && !isComment(comment + char)) {
       commentStart = false
       trailing_trivia_length = comment.length

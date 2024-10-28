@@ -11,4 +11,6 @@ case object PrimitiveTokens {
 
   def isComment(s: String): Boolean = COMMENT.matches(s)
 
+  def isNewLine(s: String): Boolean = NEWLINE.matches(s)
+
 }

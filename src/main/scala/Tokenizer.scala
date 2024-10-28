@@ -1,9 +1,10 @@
 import Keywords.{getHardKeyword, getSoftKeyword, isHardKeyword, isKeyword, isSoftKeyword}
-import PrimitiveTokens.{isIdentifier, isTrivia}
+import PrimitiveTokens.{isIdentifier, isNewLine, isTrivia}
 import TokenType.*
 import syspro.tm.lexer.{IdentifierToken, KeywordToken, Lexer, Token}
 import LiteralTokens.*
 import Runes.{RUNE_CHAR, RUNE_CHARACTER}
+import IndentationProcessor._
 
 import java.util
 import Symbols.*
@@ -13,6 +14,7 @@ case class Tokenizer() extends Lexer {
 
   override def lex(s: String): java.util.List[Token] = {
     val tokens: Tokens = Tokens()
+    val indents: IndentationProcessor= IndentationProcessor()
     var idx = 0
     var current_char: Char = '0'
     var next_char: Char = '0'
@@ -20,10 +22,29 @@ case class Tokenizer() extends Lexer {
 
     while (idx < s.length) {
       current_char = s(idx)
-      next_char = lookup(s, idx + 1)
+      next_char = lookup(s, idx + 1).getOrElse('0')
       tokens.addChar(current_char)
       idx += 1
-      if (isLongSymbol(tokens.sb)) {
+      if (isNewLine(tokens.sb)) {
+        val nextString: String = extractNextString()
+        if (nextString.isEmpty) {
+          ???
+        }
+        else if (hasIndentation(nextString)) {
+          indents.dropLevel()
+        }
+        else if (hasOnlyWhitespaces(nextString)) {
+          ???
+        }
+        else if (isEndOfFile(s, nextString, idx)) {
+          indents.dropLevel()
+        }
+        else {
+          indents.countIndentation(nextString)
+        }
+
+      }
+      else if (isLongSymbol(tokens.sb)) {
         tokens.addChar(next_char)
         idx += 1
         tokens.add(idx - 1, Symbol)
@@ -89,11 +110,11 @@ case class Tokenizer() extends Lexer {
     return tokens.tokens
   }
 
-  private def lookup(s: String, i: Int): Char = {
+  private def lookup(s: String, i: Int): Option[Char] = {
     if (i < s.length) {
-      return s(i)
+      return Some(s(i))
     } else {
-      return 'x'
+      return None
     }
   }
 

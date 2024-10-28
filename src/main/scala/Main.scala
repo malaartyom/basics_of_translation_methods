@@ -143,8 +143,8 @@ object Main {
     println(s.length)
     println(s.slice(840, 890))
     println(lexer.lex(s))
+    //    println(STRING.matches(""""Hifjn wuhuhwuf jjuh wuhubbfuhwuhfuwbfubfqn26378e9uf9jedndsa$T bro""""))
     val INTEGER: Regex = "[0-9]+(i32|i64|u32|u64)?".r
-//    println(STRING.matches(""""Hifjn wuhuhwuf jjuh wuhubbfuhwuhfuwbfubfqn26378e9uf9jedndsa$T bro""""))
   }
 }
 
