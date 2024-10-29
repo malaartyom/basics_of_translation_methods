@@ -11,14 +11,18 @@ import Symbols.*
 
 
 case class Tokenizer() extends Lexer {
+  var tokens: Tokens = Tokens()
+  private var indents = IndentationProcessor
+  var idx = 0
+  private var current_char: Char = '0'
+  private var next_char: Char = '0'
+  private var s: String = ""
 
   override def lex(s: String): java.util.List[Token] = {
-    val tokens: Tokens = Tokens()
-    val indents: IndentationProcessor= IndentationProcessor()
-    var idx = 0
-    var current_char: Char = '0'
-    var next_char: Char = '0'
-
+    this.tokens = Tokens()
+    idx = 0
+    this.s = ""
+    this.s = s
 
     while (idx < s.length) {
       current_char = s(idx)
@@ -80,7 +84,7 @@ case class Tokenizer() extends Lexer {
         tokens.updateState()
       }
       else if (isStringStart(tokens.sb)) {
-        val extractedStringInterior: String = extractString(idx, s)
+        val extractedStringInterior: String = extractString()
         idx += extractedStringInterior.length + 1
         tokens.updateState()
         tokens.addString(extractedStringInterior)
@@ -118,22 +122,32 @@ case class Tokenizer() extends Lexer {
     }
   }
 
-  private def extractString(i: Int, s: String): String = {
-    var idx: Int = i
+  private def extractString(): String = {
+    var i: Int = idx
     var extractedString = ""
-    while (s(idx) != '"') {
-      extractedString += s(idx)
-      idx += 1
+    while (s(i) != '"') {
+      extractedString += s(i)
+      i += 1
     }
     return extractedString
   }
 
   private def extractRune(i: Int, s: String): String = {
-    var idx: Int = i
+    var i: Int = idx
     var extractedRune = ""
-    while (s(idx) != "'"(0)) {
-      extractedRune += s(idx)
-      idx += 1
+    while (s(i) != "'"(0)) {
+      extractedRune += s(i)
+      i += 1
+    }
+    return extractedRune
+  }
+
+  private def extractNextString(): String = {
+    var i: Int = idx
+    var extractedRune = ""
+    while (s(i) != "'"(0)) {
+      extractedRune += s(i)
+      i += 1
     }
     return extractedRune
   }

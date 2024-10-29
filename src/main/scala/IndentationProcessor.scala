@@ -43,9 +43,9 @@ case object IndentationProcessor {
 
   def isEndOfFile(all_file: String, next_line: String, current_index: Int): Boolean = (current_index + next_line.length >= all_file.length)
 
-  def extractIndentation(s: String): String = {
-    var indentation= ""
-    i = 0
+  private def extractIndentation(s: String): String = {
+    var indentation: String = ""
+    var i = 0
     while (s(i) == ' ') {
       indentation += s(i)
       i += 1

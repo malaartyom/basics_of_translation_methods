@@ -9,12 +9,12 @@ object Main {
 //    println(WHITESPACE.matches(" "))
 //    println(Runes.RUNE.matches("""'\n'"""))
 //
-//    println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
-//    println(lexer.lex(
-//      """var xyz=123u32+124u32   #  bro
-//        |class Object
-//        |
-//        |""".stripMargin))
+    println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
+    println(lexer.lex(
+      """var xyz=123u32+124u32   #  bro
+        |class Object
+        |
+        |""".stripMargin))
     var s = """class Object
                         |object PrimitiveIntrinsics<T>
                         |    native def default(): T # Available for all primitive or nullable types
