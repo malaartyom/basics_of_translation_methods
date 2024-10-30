@@ -49,8 +49,7 @@ case class Tokenizer() extends Lexer {
           val indentType = if (numOfIndents >= 0) Indent else Dedent
           tokens.add(idx, indentType, numOfIndents)
         }
-        tokens.updateState()
-
+        tokens.dropStringBuilder()
       }
       else if (isLongSymbol(tokens.sb)) {
         tokens.addChar(next_char)

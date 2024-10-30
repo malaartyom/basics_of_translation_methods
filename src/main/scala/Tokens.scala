@@ -11,13 +11,20 @@ case class Tokens() {
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
 
+  private var trivia: String = ""
+  private var start = 0
+  private var end = 0
+
   var sb = ""
 
+
+  def dropStringBuilder(): Unit = sb = ""
 
   def updateState(): Unit = {
     sb = ""
     trailing_trivia_length = 0
     leading_trivia_length = 0
+    trivia = ""
   }
 
   def addChar(char: Char): Unit = {
@@ -26,8 +33,11 @@ case class Tokens() {
     }
     else if (isNewLine(char.toString) || isComment(char.toString)) {
       sb += char
+      trivia += char
+      trailing_trivia_length += 1
     }
-    else if (isTrivia(char.toString)) {
+    if (isTrivia(char.toString) && !isNewLine(char.toString)) {
+      trivia += char
       trailing_trivia_length += 1
     }
   }
@@ -41,17 +51,16 @@ case class Tokens() {
     for (_ <- 1 to x) add(idx, tokenType)
 
   def add(idx: Int, tokenType: TokenType): Unit = {
-    var start = 0
-    var end = 0
     if (tokens.isEmpty) {
       trailing_trivia_length = 0
-      leading_trivia_length = 1 // это неправда нужно исправить
+      leading_trivia_length = 0 // ???
       start = 0
       end = idx + leading_trivia_length
     } else {
       leading_trivia_length = 0
-      start = idx - sb.length - trailing_trivia_length
-      end = idx + 1
+      trailing_trivia_length = trivia.length
+      start = end + 1
+      end = idx
     }
     tokens.add(tokenType match {
       case HardKeyword => new KeywordToken(start, end, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
@@ -62,8 +71,8 @@ case class Tokens() {
       case StringLiteral => new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
-      case Indent => new IndentationToken(idx - 1, idx - 1, leading_trivia_length, trailing_trivia_length, 1)
-      case Dedent => new IndentationToken(idx - 1, idx - 1, leading_trivia_length, trailing_trivia_length, -1)
+      case Indent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, 1)
+      case Dedent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)

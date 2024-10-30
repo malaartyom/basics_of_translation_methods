@@ -17,7 +17,7 @@ object Main {
         |""".stripMargin))
     var s = """class Indent1
               |   def notMultipleOf2(): Boolean
-              |      return true""".stripMargin
+              |      return  true""".stripMargin
 
     println(s.length)
     println(s.slice(840, 890))
