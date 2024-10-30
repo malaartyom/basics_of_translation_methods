@@ -15,21 +15,20 @@ case class Tokens() {
 
 
   def updateState(): Unit = {
-    // TODO: DO some fixes in update State
     sb = ""
-    // TODO: Think about trivia len
-    trailing_trivia_length = leading_trivia_length
+    trailing_trivia_length = 0
     leading_trivia_length = 0
   }
 
   def addChar(char: Char): Unit = {
     if (!isTrivia(char.toString)) {
       sb += char
-    } else if (isNewLine(char.toString) || isComment(char.toString)) {
+    }
+    else if (isNewLine(char.toString) || isComment(char.toString)) {
       sb += char
     }
-    else {
-      leading_trivia_length += 1
+    else if (isTrivia(char.toString)) {
+      trailing_trivia_length += 1
     }
   }
 
@@ -42,21 +41,33 @@ case class Tokens() {
     for (_ <- 1 to x) add(idx, tokenType)
 
   def add(idx: Int, tokenType: TokenType): Unit = {
+    var start = 0
+    var end = 0
+    if (tokens.isEmpty) {
+      trailing_trivia_length = 0
+      leading_trivia_length = 1 // это неправда нужно исправить
+      start = 0
+      end = idx + leading_trivia_length
+    } else {
+      leading_trivia_length = 0
+      start = idx - sb.length - trailing_trivia_length
+      end = idx + 1
+    }
     tokens.add(tokenType match {
-      case HardKeyword => new KeywordToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
-      case SoftKeyword => new IdentifierToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb, Keywords.getSoftKeyword(sb))
-      case Identifier => new IdentifierToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb, null)
-      case Symbol => new SymbolToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, Symbols.getSymbol(sb))
-      case BooleanLiteral => new BooleanLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, LiteralTokens.getBoolean(sb))
-      case StringLiteral => new StringLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb)
-      case RuneLiteral => new RuneLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
-      case Bad => new BadToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length)
-      case Indent => new IndentationToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, 1)
-      case Dedent => new IndentationToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, -1)
+      case HardKeyword => new KeywordToken(start, end, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
+      case SoftKeyword => new IdentifierToken(start, end, leading_trivia_length, trailing_trivia_length, sb, Keywords.getSoftKeyword(sb))
+      case Identifier => new IdentifierToken(start, end, leading_trivia_length, trailing_trivia_length, sb, null)
+      case Symbol => new SymbolToken(start, end, leading_trivia_length, trailing_trivia_length, Symbols.getSymbol(sb))
+      case BooleanLiteral => new BooleanLiteralToken(start, end,leading_trivia_length, trailing_trivia_length, LiteralTokens.getBoolean(sb))
+      case StringLiteral => new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
+      case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
+      case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
+      case Indent => new IndentationToken(idx - 1, idx - 1, leading_trivia_length, trailing_trivia_length, 1)
+      case Dedent => new IndentationToken(idx - 1, idx - 1, leading_trivia_length, trailing_trivia_length, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)
-        new IntegerLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
+        new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
 }
