@@ -17,6 +17,7 @@ case class Tokens() {
   private var trivia: String = ""
   private var start = 0
   private var end = 0
+  private var real_end = 0
 
   var sb = ""
 
@@ -49,11 +50,12 @@ case class Tokens() {
     sb += s
   }
 
-  def flush(): Unit = add(end + 1, Dedent, dedentsToFlush)
+  def flush(): Unit = add(tokens.getLast.end + 1, Dedent, dedentsToFlush)
 
   def add(idx: Int, tokenType: TokenType, num: Int): Unit =
+    val i = idx + 1
     val x = num.abs
-    for (_ <- 1 to x) add(idx, tokenType)
+    for (_ <- 1 to x) add(i, tokenType)
 
 
   def add(idx: Int, tokenType: TokenType): Unit = {
@@ -67,6 +69,7 @@ case class Tokens() {
       leading_trivia_length = trivia.length
       start = end + 1
       end = idx
+      real_end = idx
     }
     tokens.add(tokenType match {
       case HardKeyword => new KeywordToken(start, end, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
@@ -77,8 +80,8 @@ case class Tokens() {
       case StringLiteral => new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
-      case Indent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, 1)
-      case Dedent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, -1)
+      case Indent => end = idx - 2; real_end = idx - 1; new IndentationToken(idx - 1, idx - 1, 0, 0, 1)
+      case Dedent => end = idx - 2; real_end = idx - 1; new IndentationToken(idx - 1, idx - 1, 0, 0, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)

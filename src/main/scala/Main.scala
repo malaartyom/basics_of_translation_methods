@@ -8,13 +8,13 @@ object Main {
   def main(args: Array[String]): Unit = {
     var lexer = Tokenizer()
 //    syspro.tm.Tasks.Lexer.registerSolution(lexer)
-    println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
-    println(lexer.lex("""for i in range(0, 10): \n    print(X)"""))
-    println(lexer.lex(
-      """var xyz=123u32+124u32   #  bro
-        |class Object
-        |
-        |""".stripMargin))
+//    println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
+//    println(lexer.lex("""for i in range(0, 10): \n    print(X)"""))
+//    println(lexer.lex(
+//      """var xyz=123u32+124u32   #  bro
+//        |class Object
+//        |
+//        |""".stripMargin))
     var s = """class Indent1
               |   def notMultipleOf2(): Boolean
               |      return true""".stripMargin
