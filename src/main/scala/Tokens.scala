@@ -10,8 +10,6 @@ case class Tokens() {
   var tokens = new util.ArrayList[Token]()
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
-  private var comment = ""
-  private var commentStart = false
 
   var sb = ""
 

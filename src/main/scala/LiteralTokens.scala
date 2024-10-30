@@ -1,9 +1,8 @@
 import Boolean.BOOLEAN
 import Integer.INTEGER
 import Integer.INT_SUFFIX
-import Runes.{RUNE, RUNE_CHAR, RUNE_CHARACTER, RUNE_INTERIOR}
+import Runes.{RUNE_CHAR, RUNE_INTERIOR}
 import StringLiteral.{STRING, STRING_INTERIOR, STRING_START}
-import Trivia.COMMENT
 import syspro.tm.lexer.BuiltInType
 
 case object LiteralTokens {
