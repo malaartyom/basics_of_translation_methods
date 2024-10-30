@@ -22,8 +22,8 @@ case class Tokens() {
 
   def updateState(): Unit = {
     sb = ""
-    trailing_trivia_length = 0
     leading_trivia_length = 0
+    trailing_trivia_length = 0
     trivia = ""
   }
 
@@ -34,11 +34,11 @@ case class Tokens() {
     else if (isNewLine(char.toString) || isComment(char.toString)) {
       sb += char
       trivia += char
-      trailing_trivia_length += 1
+      leading_trivia_length += 1
     }
     if (isTrivia(char.toString) && !isNewLine(char.toString)) {
       trivia += char
-      trailing_trivia_length += 1
+      leading_trivia_length += 1
     }
   }
 
@@ -52,13 +52,13 @@ case class Tokens() {
 
   def add(idx: Int, tokenType: TokenType): Unit = {
     if (tokens.isEmpty) {
-      trailing_trivia_length = 0
-      leading_trivia_length = 0 // ???
-      start = 0
-      end = idx + leading_trivia_length
-    } else {
       leading_trivia_length = 0
-      trailing_trivia_length = trivia.length
+      trailing_trivia_length = 0 // ???
+      start = 0
+      end = idx
+    } else {
+      trailing_trivia_length = 0
+      leading_trivia_length = trivia.length
       start = end + 1
       end = idx
     }
