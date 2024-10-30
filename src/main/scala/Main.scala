@@ -7,7 +7,7 @@ import scala.util.matching.Regex
 object Main {
   def main(args: Array[String]): Unit = {
     var lexer = Tokenizer()
-//    syspro.tm.Tasks.Lexer.registerSolution(lexer)
+    syspro.tm.Tasks.Lexer.registerSolution(lexer)
     println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
     println(lexer.lex("""for i in range(0, 10): \n    print(X)"""))
     println(lexer.lex(
@@ -15,9 +15,9 @@ object Main {
         |class Object
         |
         |""".stripMargin))
-    var s = """class Indent1
-              |   def notMultipleOf2(): Boolean
-              |      return  true""".stripMargin
+    var s = """
+              |  class Indent8
+              |    val x = 42""".stripMargin
 
     println(s.length)
     println(s.slice(840, 890))

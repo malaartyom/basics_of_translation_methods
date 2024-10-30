@@ -25,7 +25,7 @@ case class Tokenizer() extends Lexer {
 
     while (idx < s.length) {
       current_char = s(idx)
-      next_char = lookup(s, idx + 1).getOrElse('0')
+      next_char = lookup(s, idx + 1).getOrElse('?')
       tokens.addChar(current_char)
       idx += 1
       if (isNewLine(tokens.sb)) {
@@ -119,7 +119,7 @@ case class Tokenizer() extends Lexer {
         }
       }
     }
-    tokens.flush(idx)
+    tokens.flush(idx + 1)
     return tokens.tokens
   }
 
