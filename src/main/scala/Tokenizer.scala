@@ -119,7 +119,7 @@ case class Tokenizer() extends Lexer {
         }
       }
     }
-    tokens.flush(idx + 1)
+    tokens.flush()
     return tokens.tokens
   }
 

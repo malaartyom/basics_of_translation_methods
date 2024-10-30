@@ -48,8 +48,8 @@ case class Tokens() {
   def addString(s: String): Unit = {
     sb += s
   }
-  
-  def flush(idx: Int): Unit = add(idx, Dedent, dedentsToFlush)
+
+  def flush(): Unit = add(end + 1, Dedent, dedentsToFlush)
 
   def add(idx: Int, tokenType: TokenType, num: Int): Unit =
     val x = num.abs
