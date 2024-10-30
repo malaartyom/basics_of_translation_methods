@@ -40,14 +40,13 @@ case class Tokenizer() extends Lexer {
         else if (indents.hasOnlyWhitespaces(nextString)) {
           indents.updateLevel()
         }
-        else if (indents.isEndOfFile(s, nextString, idx)) {
-          val numOfDedent = indents.dropLevel()
-          tokens.add(idx, Dedent, numOfDedent)
-        }
         else {
           val numOfIndents = indents.countIndentation(nextString)
           val indentType = if (numOfIndents >= 0) Indent else Dedent
           tokens.add(idx, indentType, numOfIndents)
+        }
+        if (indents.isEndOfFile(s, nextString, idx)) {
+          tokens.dedentsToFlush = indents.dropLevel()
         }
         tokens.dropStringBuilder()
       }
@@ -120,6 +119,7 @@ case class Tokenizer() extends Lexer {
         }
       }
     }
+    tokens.flush(idx)
     return tokens.tokens
   }
 

@@ -59,7 +59,7 @@ case class IndentationProcessor() {
 
   def hasIndentation(s: String): Boolean = s.startsWith(WHITESPACE) || s.startsWith(TABULATION)
 
-  def isEndOfFile(all_file: String, next_line: String, current_index: Int): Boolean = (current_index + next_line.length >= all_file.length)
+  def isEndOfFile(all_file: String, next_string:String, current_index: Int): Boolean = current_index + next_string.length >= all_file.length
 
   private def extractIndentation(s: String): String = {
     var indentation: String = ""

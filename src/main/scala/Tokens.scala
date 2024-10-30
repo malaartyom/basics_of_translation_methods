@@ -1,13 +1,16 @@
 import PrimitiveTokens._
 import TokenType._
-import syspro.tm.lexer.{KeywordToken, IdentifierToken,
+import syspro.tm.lexer.{
+  KeywordToken, IdentifierToken,
   BooleanLiteralToken, SymbolToken, Token, IntegerLiteralToken,
-  BuiltInType, StringLiteralToken, RuneLiteralToken, BadToken, IndentationToken}
+  BuiltInType, StringLiteralToken, RuneLiteralToken, BadToken, IndentationToken
+}
 import java.util
 import LiteralTokens._
 
 case class Tokens() {
   var tokens = new util.ArrayList[Token]()
+  var dedentsToFlush = 0
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
 
@@ -45,15 +48,18 @@ case class Tokens() {
   def addString(s: String): Unit = {
     sb += s
   }
+  
+  def flush(idx: Int): Unit = add(idx, Dedent, dedentsToFlush)
 
   def add(idx: Int, tokenType: TokenType, num: Int): Unit =
     val x = num.abs
     for (_ <- 1 to x) add(idx, tokenType)
 
+
   def add(idx: Int, tokenType: TokenType): Unit = {
     if (tokens.isEmpty) {
       leading_trivia_length = 0
-      trailing_trivia_length = 0 // ???
+      trailing_trivia_length = 0
       start = 0
       end = idx
     } else {
@@ -67,7 +73,7 @@ case class Tokens() {
       case SoftKeyword => new IdentifierToken(start, end, leading_trivia_length, trailing_trivia_length, sb, Keywords.getSoftKeyword(sb))
       case Identifier => new IdentifierToken(start, end, leading_trivia_length, trailing_trivia_length, sb, null)
       case Symbol => new SymbolToken(start, end, leading_trivia_length, trailing_trivia_length, Symbols.getSymbol(sb))
-      case BooleanLiteral => new BooleanLiteralToken(start, end,leading_trivia_length, trailing_trivia_length, LiteralTokens.getBoolean(sb))
+      case BooleanLiteral => new BooleanLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, LiteralTokens.getBoolean(sb))
       case StringLiteral => new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
