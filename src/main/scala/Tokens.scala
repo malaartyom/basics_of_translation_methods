@@ -2,7 +2,7 @@ import PrimitiveTokens._
 import TokenType._
 import syspro.tm.lexer.{KeywordToken, IdentifierToken,
   BooleanLiteralToken, SymbolToken, Token, IntegerLiteralToken,
-  BuiltInType, StringLiteralToken, RuneLiteralToken, BadToken}
+  BuiltInType, StringLiteralToken, RuneLiteralToken, BadToken, IndentationToken}
 import java.util
 import LiteralTokens._
 
@@ -22,23 +22,15 @@ case class Tokens() {
     // TODO: Think about trivia len
     trailing_trivia_length = leading_trivia_length
     leading_trivia_length = 0
-    commentStart = false
   }
 
   def addChar(char: Char): Unit = {
-
-    if (isComment(comment) && !isComment(comment + char)) {
-      commentStart = false
-      trailing_trivia_length = comment.length
-      comment = ""
-    }
-    else if (isComment(comment + char.toString)) {
-      comment += char
-      commentStart = true
-    }
-    if (!isTrivia(char.toString) && !commentStart) {
+    if (!isTrivia(char.toString)) {
       sb += char
-    } else {
+    } else if (isNewLine(char.toString) || isComment(char.toString)) {
+      sb += char
+    }
+    else {
       leading_trivia_length += 1
     }
   }
@@ -46,6 +38,10 @@ case class Tokens() {
   def addString(s: String): Unit = {
     sb += s
   }
+
+  def add(idx: Int, tokenType: TokenType, num: Int): Unit =
+    val x = num.abs
+    for (_ <- 1 to x) add(idx, tokenType)
 
   def add(idx: Int, tokenType: TokenType): Unit = {
     tokens.add(tokenType match {
@@ -57,6 +53,8 @@ case class Tokens() {
       case StringLiteral => new StringLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length)
+      case Indent => new IndentationToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, 1)
+      case Dedent => new IndentationToken(idx - sb.length + 1, idx, leading_trivia_length, trailing_trivia_length, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)

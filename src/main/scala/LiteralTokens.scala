@@ -3,6 +3,7 @@ import Integer.INTEGER
 import Integer.INT_SUFFIX
 import Runes.{RUNE, RUNE_CHAR, RUNE_CHARACTER, RUNE_INTERIOR}
 import StringLiteral.{STRING, STRING_INTERIOR, STRING_START}
+import Trivia.COMMENT
 import syspro.tm.lexer.BuiltInType
 
 case object LiteralTokens {
@@ -21,7 +22,7 @@ case object LiteralTokens {
 
   def isStringStart(s: String): Boolean = STRING_START.matches(s)
 
-  def isRuneStart(s: String): Boolean = RUNE_CHAR.matches(s)
+  def isRuneStart(s: String): Boolean = RUNE_CHAR.r.matches(s)
 
   def getSuffix(s: String, hasSuffix: Boolean): BuiltInType = {
     if (!hasSuffix) return BuiltInType.INT64

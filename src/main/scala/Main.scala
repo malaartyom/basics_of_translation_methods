@@ -10,6 +10,7 @@ object Main {
 //    println(Runes.RUNE.matches("""'\n'"""))
 //
     println(lexer.lex("""var x = 'b'  '\n'  var govno = "hui"   """))
+    println(lexer.lex("""for i in range(0, 10): \n    print(X)"""))
     println(lexer.lex(
       """var xyz=123u32+124u32   #  bro
         |class Object
@@ -17,42 +18,7 @@ object Main {
         |""".stripMargin))
     var s = """class Object
                         |object PrimitiveIntrinsics<T>
-                        |    native def default(): T # Available for all primitive or nullable types
-                        |    # The following are valid only for numeric T
-                        |    native def one(): T
-                        |    native def add(left: T, right: T): T
-                        |    native def subtract(left: T, right: T): T
-                        |    native def multiply(left: T, right: T): T
-                        |    native def divide(left: T, right: T): T
-                        |    native def remainder(left: T, right: T): T
-                        |    native def less(left: T, right: T): T
-                        |    native def greater(left: T, right: T): T
-                        |    native def toString(num: T): String
-                        |object System
-                        |    native def print(message: String)
-                        |    native def println(message: String)
-                        |    native def failFast(message: String)
-                        |interface Iterator<T>
-                        |    def hasNext(): Boolean
-                        |    def next(): T
-                        |interface Iterable<T>
-                        |    def iterator(): Iterator<T>
-                        |class RangeIterator<T> <: Iterator<T> # Supports only numeric T, no way to express in SysPro
-                        |    val _range: Range<T>
-                        |    val _next: T
-                        |    def this(range: Range<T>)
-                        |        this._range = range
-                        |        this._next = range.start
-                        |    def hasNext(): Boolean
-                        |        if PrimitiveIntrinsics<T>.greater(_range.step, PrimitiveIntrinsics<T>.default())
-                        |            return PrimitiveIntrinsics<T>.less(_next, _range.end)
-                        |        else
-                        |            return PrimitiveIntrinsics<T>.greater(_next, _range.end)
-                        |    def next(): T
-                        |        if !hasNext()
-                        |            System.failFast("No next element is available in Range<T>")
-                        |        val result = _next
-                        |        _next = PrimitiveIntrinsics<T>.add(_next, _range.step)
+                        |    def abs()
                         |        return result
                         |class Range<T> <: Iterable<T>
                         |    val start: T
@@ -105,15 +71,8 @@ object Main {
                         |    def subscript(index: UInt64): Rune
                         |        return _runes[index]
                         |class ArrayListIterator<T>
-                        |    val _list: ArrayList<T>
-                        |    var _index: UInt64 = 0
-                        |    def this(list: ArrayList<T>)
-                        |        this._list = list
-                        |    def hasNext(): Boolean
-                        |        return _index < _list.length
+
                         |    def next(): T
-                        |        if !hasNext()
-                        |            System.failFast("No next element is available in ArrayList<T>")
                         |        val result = _list[_index] # Will failFast if necessary
                         |        _index = _index + 1u64
                         |        return result

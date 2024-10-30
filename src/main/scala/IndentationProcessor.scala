@@ -1,16 +1,23 @@
 import Trivia.WHITESPACE
 
-case object IndentationProcessor {
+case class IndentationProcessor() {
   private val WHITESPACE: String = " "
   private val TABULATION: String = """\t"""
 
   private var currentIndentationLevel = 0
   private var currentIndentationLength = -1
 
-  def dropLevel(): Unit = {
+  def dropLevel(): Int = {
+    val tmp = currentIndentationLevel
     currentIndentationLevel = 0
+    currentIndentationLength = -1
+    return -tmp
   }
 
+  def updateLevel(): Unit = {
+    currentIndentationLevel = currentIndentationLevel
+    currentIndentationLength = currentIndentationLength
+  }
   def updateLevel(num: Int): Unit = {
     currentIndentationLevel = num
   }
@@ -19,22 +26,33 @@ case object IndentationProcessor {
     currentIndentationLength = num
   }
 
-  def countIndentation(s: String): Unit = {
-    var indent: String = extractIndentation(s)
+  def countIndentation(s: String): Int = {
+    val indent: String = extractIndentation(s)
     if (indent.length % 2 != 0) {
-      ???
+      updateLevel()
+      return 0
     }
-    else if (currentIndentationLevel == 0) {
-      currentIndentationLength += indent.length
-      currentIndentationLevel += 1
+    else if (currentIndentationLevel == 0 && indent.nonEmpty) {
+      currentIndentationLength = indent.length
+      currentIndentationLevel = 1
+      return 1
     }
     else if (indent.length % currentIndentationLength != 0) {
-      ???
+      updateLevel()
+      return 0
     }
     else if (indent.isEmpty) {
-      dropLevel()
+      val numOdDedent = dropLevel()
+      return numOdDedent
     }
-    // TODO: Если кратно
+    else if (indent.length % currentIndentationLength == 0) {
+      val N = indent.length / currentIndentationLength
+      val prevIndentationLevel = currentIndentationLevel
+      currentIndentationLevel = N
+      currentIndentationLength = indent.length
+      return N - prevIndentationLevel
+    }
+    return 0
   }
 
   def hasOnlyWhitespaces(s: String): Boolean = Trivia.WHITESPACE.matches(s)

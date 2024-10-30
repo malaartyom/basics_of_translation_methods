@@ -1,10 +1,9 @@
-import Keywords.{getHardKeyword, getSoftKeyword, isHardKeyword, isKeyword, isSoftKeyword}
-import PrimitiveTokens.{isIdentifier, isNewLine, isTrivia}
+import Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
+import PrimitiveTokens.{isComment, isIdentifier, isNewLine}
 import TokenType.*
-import syspro.tm.lexer.{IdentifierToken, KeywordToken, Lexer, Token}
+import syspro.tm.lexer.{Lexer, Token}
 import LiteralTokens.*
-import Runes.{RUNE_CHAR, RUNE_CHARACTER}
-import IndentationProcessor._
+import IndentationProcessor.*
 
 import java.util
 import Symbols.*
@@ -12,17 +11,17 @@ import Symbols.*
 
 case class Tokenizer() extends Lexer {
   var tokens: Tokens = Tokens()
-  private var indents = IndentationProcessor
+  private var indents = IndentationProcessor()
   var idx = 0
   private var current_char: Char = '0'
   private var next_char: Char = '0'
   private var s: String = ""
 
-  override def lex(s: String): java.util.List[Token] = {
+  override def lex(str: String): java.util.List[Token] = {
     this.tokens = Tokens()
+    indents = IndentationProcessor()
     idx = 0
-    this.s = ""
-    this.s = s
+    this.s = str
 
     while (idx < s.length) {
       current_char = s(idx)
@@ -32,20 +31,25 @@ case class Tokenizer() extends Lexer {
       if (isNewLine(tokens.sb)) {
         val nextString: String = extractNextString()
         if (nextString.isEmpty) {
-          ???
+          indents.updateLevel()
         }
-        else if (hasIndentation(nextString)) {
-          indents.dropLevel()
+        else if (!indents.hasIndentation(nextString)) {
+          val numOfDedent = indents.dropLevel()
+          tokens.add(idx, Dedent, numOfDedent)
         }
-        else if (hasOnlyWhitespaces(nextString)) {
-          ???
+        else if (indents.hasOnlyWhitespaces(nextString)) {
+          indents.updateLevel()
         }
-        else if (isEndOfFile(s, nextString, idx)) {
-          indents.dropLevel()
+        else if (indents.isEndOfFile(s, nextString, idx)) {
+          val numOfDedent = indents.dropLevel()
+          tokens.add(idx, Dedent, numOfDedent)
         }
         else {
-          indents.countIndentation(nextString)
+          val numOfIndents = indents.countIndentation(nextString)
+          val indentType = if (numOfIndents >= 0) Indent else Dedent
+          tokens.add(idx, indentType, numOfIndents)
         }
+        tokens.updateState()
 
       }
       else if (isLongSymbol(tokens.sb)) {
@@ -57,6 +61,12 @@ case class Tokenizer() extends Lexer {
       else if (isShortSymbol(tokens.sb)) {
         tokens.add(idx - 1, Symbol)
         tokens.updateState()
+      }
+      else if(isComment(tokens.sb)) {
+        val extractedComment = extractComment()
+        idx += extractedComment.length
+        tokens.updateState()
+
       }
       else if (isBoolean(tokens.sb)) {
         tokens.add(idx - 1, BooleanLiteral)
@@ -72,7 +82,7 @@ case class Tokenizer() extends Lexer {
         tokens.updateState()
       }
       else if (isRuneStart(tokens.sb)) {
-        val extractedRuneInterior: String = extractRune(idx, s)
+        val extractedRuneInterior: String = extractRune()
         idx += extractedRuneInterior.length + 1
         tokens.updateState()
         tokens.addString(extractedRuneInterior)
@@ -122,35 +132,24 @@ case class Tokenizer() extends Lexer {
     }
   }
 
-  private def extractString(): String = {
+  private def extractString(): String = extract('"')
+
+  private def extractRune(): String = extract("'"(0))
+
+  private def extractNextString(): String = extract("\n"(0))
+
+  private def extractComment(): String = extract("\n"(0))
+
+  private def extract(StopChar: Char): String = {
     var i: Int = idx
-    var extractedString = ""
-    while (s(i) != '"') {
-      extractedString += s(i)
+    var extracted = ""
+    while (i < s.length && s(i) != StopChar) {
+      extracted += s(i)
       i += 1
     }
-    return extractedString
+    return extracted
   }
 
-  private def extractRune(i: Int, s: String): String = {
-    var i: Int = idx
-    var extractedRune = ""
-    while (s(i) != "'"(0)) {
-      extractedRune += s(i)
-      i += 1
-    }
-    return extractedRune
-  }
-
-  private def extractNextString(): String = {
-    var i: Int = idx
-    var extractedRune = ""
-    while (s(i) != "'"(0)) {
-      extractedRune += s(i)
-      i += 1
-    }
-    return extractedRune
-  }
 
 
 }
