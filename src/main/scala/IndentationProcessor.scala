@@ -18,14 +18,6 @@ case class IndentationProcessor() {
     currentIndentationLevel = currentIndentationLevel
     currentIndentationLength = currentIndentationLength
   }
-  def updateLevel(num: Int): Unit = {
-    currentIndentationLevel = num
-  }
-
-  def updateLength(num: Int): Unit = {
-    currentIndentationLength = num
-  }
-
   def countIndentation(s: String): Int = {
     val indent: String = extractIndentation(s)
     if (indent.length % 2 != 0) {
@@ -47,10 +39,11 @@ case class IndentationProcessor() {
     }
     else if (indent.length % currentIndentationLength == 0) {
       val N = indent.length / currentIndentationLength
+      if (N == 1) return 0
       val prevIndentationLevel = currentIndentationLevel
-      currentIndentationLevel = N
+      currentIndentationLevel += (indent.length / currentIndentationLength - 1)
       currentIndentationLength = indent.length
-      return N - prevIndentationLevel
+      return currentIndentationLevel - prevIndentationLevel
     }
     return 0
   }
@@ -59,16 +52,20 @@ case class IndentationProcessor() {
 
   def hasIndentation(s: String): Boolean = s.startsWith(WHITESPACE) || s.startsWith(TABULATION)
 
-  def isEndOfFile(all_file: String, next_string:String, current_index: Int): Boolean = current_index + next_string.length >= all_file.length
-
   private def extractIndentation(s: String): String = {
-    var indentation: String = ""
+    var indentation: String = "" // TODO: Fix
     var i = 0
     while (s(i) == ' ') {
       indentation += s(i)
       i += 1
     }
     return indentation
+  }
+  
+  def hasComment(s: String): Boolean = {
+    var i = extractIndentation(s).length
+    if (s(i) == '#') return true
+    return false
   }
 
 }

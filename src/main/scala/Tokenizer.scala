@@ -1,5 +1,5 @@
 import Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import PrimitiveTokens.{isComment, isIdentifier, isNewLine}
+import PrimitiveTokens.{isComment, isIdentifier, isNewLine, isEndOfFile}
 import TokenType.*
 import syspro.tm.lexer.{Lexer, Token}
 import LiteralTokens.*
@@ -18,7 +18,7 @@ case class Tokenizer() extends Lexer {
   private var s: String = ""
 
   override def lex(str: String): java.util.List[Token] = {
-    this.tokens = Tokens()
+    this.tokens = Tokens(str)
     indents = IndentationProcessor()
     idx = 0
     this.s = str
@@ -45,7 +45,7 @@ case class Tokenizer() extends Lexer {
           val indentType = if (numOfIndents >= 0) Indent else Dedent
           tokens.add(idx, indentType, numOfIndents)
         }
-        if (indents.isEndOfFile(s, nextString, idx)) {
+        if (isEndOfFile(s, nextString, idx)) {
           tokens.dedentsToFlush = indents.dropLevel()
         }
         tokens.dropStringBuilder()
@@ -60,10 +60,11 @@ case class Tokenizer() extends Lexer {
         tokens.add(idx - 1, Symbol)
         tokens.updateState()
       }
-      else if(isComment(tokens.sb)) {
+      else if (isComment(tokens.sb)) {
         val extractedComment = extractComment()
+        tokens.addToTrivia(extractedComment)
         idx += extractedComment.length
-        tokens.updateState()
+        tokens.dropStringBuilder()
 
       }
       else if (isBoolean(tokens.sb)) {
@@ -148,7 +149,6 @@ case class Tokenizer() extends Lexer {
     }
     return extracted
   }
-
 
 
 }

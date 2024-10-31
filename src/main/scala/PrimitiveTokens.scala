@@ -11,4 +11,7 @@ case object PrimitiveTokens {
 
   def isNewLine(s: String): Boolean = NEWLINE.matches(s)
 
+  def isEndOfFile(all_file: String, next_string: String, current_index: Int): Boolean = current_index + next_string.length >= all_file.length
+
+
 }
