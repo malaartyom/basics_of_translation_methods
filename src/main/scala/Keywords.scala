@@ -1,5 +1,6 @@
 import scala.collection.mutable
 import syspro.tm.lexer.Keyword
+import LiteralTokens.isNull
 
 case object Keywords {
   private val HardKeywords: mutable.HashMap[String, Keyword] = mutable.HashMap(
@@ -34,7 +35,8 @@ case object Keywords {
 
   def isSoftKeyword(s: String): Boolean = SoftKeywords.contains(s)
 
-  def isKeyword(s: String): Boolean = isSoftKeyword(s) || isHardKeyword(s)
+  def isKeyword(s: String, next: String = ""): Boolean = 
+    if (isNull(next)) false else isSoftKeyword(s + next) || isHardKeyword(s + next)
 
   def getHardKeyword(s: String): Keyword = HardKeywords(s)
 

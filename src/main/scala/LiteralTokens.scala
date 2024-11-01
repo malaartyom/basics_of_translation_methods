@@ -9,7 +9,7 @@ case object LiteralTokens {
 
   def isBoolean(s: String): Boolean = BOOLEAN.matches(s)
 
-  def isInteger(s: String): Boolean = INTEGER.matches(s)
+  def isInteger(s: String, next: String = ""): Boolean = if (isNull(next)) false else INTEGER.matches(s + next)
 
   def isStringInterior(s: String): Boolean = STRING_INTERIOR.matches(s)
 
@@ -22,6 +22,12 @@ case object LiteralTokens {
   def isStringStart(s: String): Boolean = STRING_START.matches(s)
 
   def isRuneStart(s: String): Boolean = RUNE_CHAR.r.matches(s)
+  
+  def notNull(s: String): Boolean = s != null
+  
+  def isNull(s: String): Boolean = s == null
+  
+  def toInt(x: Boolean): Int = if (x) 1 else 0
 
   def getSuffix(s: String, hasSuffix: Boolean): BuiltInType = {
     if (!hasSuffix) return BuiltInType.INT64

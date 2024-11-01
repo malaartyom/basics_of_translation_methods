@@ -19,7 +19,7 @@ case class Tokens(str: String = "") {
   private var trivia: String = ""
   private var start = 0
   private var end = 0
-  private var trueEnd = 0
+  var trueEnd = 0
 
   var sb = ""
 
@@ -55,33 +55,16 @@ case class Tokens(str: String = "") {
     sb += s
   }
 
-  def flush(i: Int): Unit =
+  def flush(number: Int, place: Int = trueEnd + 1): Unit =
     var idx = 0
-    if (!tokens.isEmpty) {               // TODO: Причесать, выглядит ужасно 
-      if (!isSyntheticToken(tokens.getLast)) {
-        if (lastLineBreak == - 1) {
-          idx = tokens.getLast.end + 1 
-        }
-        else {
-          idx = lastLineBreak
-        }
-      }
-      else {
-        if (lastLineBreak == -1) {
-          
-        }
-        
-        idx = trueEnd + 1
-      }
-    }
-    add(idx + 1, Dedent, dedentsToFlush)
+    add(place, Dedent, number, flushFlag = true)
 
-  def add(idx: Int, tokenType: TokenType, num: Int): Unit =
+  def add(idx: Int, tokenType: TokenType, num: Int, flushFlag: Boolean): Unit =
     val x = num.abs
-    for (_ <- 1 to x) add(idx, tokenType)
+    for (_ <- 1 to x) add(idx, tokenType, flushFlag)
 
 
-  def add(idx: Int, tokenType: TokenType): Unit = {
+  def add(idx: Int, tokenType: TokenType, flushFlag: Boolean = false): Unit = {
     val nextTrivia: String = extractTillEnd(idx + 1)
 
     if (tokens.isEmpty) {
@@ -113,8 +96,8 @@ case class Tokens(str: String = "") {
       case StringLiteral => end = end - 1; new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
-      case Indent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, 1)
-      case Dedent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, -1)
+      case Indent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag), 0, 0, 1)
+      case Dedent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1,idx - toInt(!flushFlag), 0, 0, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)

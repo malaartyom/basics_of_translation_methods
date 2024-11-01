@@ -1,16 +1,16 @@
+import IndentationProcessor.{hasIndentation, hasOnlyWhitespaces}
 import Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
 import PrimitiveTokens.{isComment, isEndOfFile, isIdentifier, isNewLine, isTrivia}
 import TokenType.*
 import syspro.tm.lexer.{Lexer, Token}
-import LiteralTokens.*
-import IndentationProcessor.*
-import UnicodeProcessor._
+import LiteralTokens.{notNull, *}
+import UnicodeProcessor.*
 
 import java.util
 import Symbols.*
 
 
-case class Tokenizer() extends Lexer {
+case class Tokenizer() extends Lexer with Extractor{
   var tokens: Tokens = Tokens()
   private var indents = IndentationProcessor()
   var idx = 0
@@ -18,18 +18,18 @@ case class Tokenizer() extends Lexer {
   private var next_char: String = ""
   private var s: String = ""
 
-  override def lex(str: String): java.util.List[Token] = {
-    val unicodeProcessor = UnicodeProcessor(str)
+  private var unicodeProcessor: UnicodeProcessor = UnicodeProcessor()
 
-    next_char = unicodeProcessor.get()
+  override def lex(str: String): java.util.List[Token] = {
+    unicodeProcessor = UnicodeProcessor(str)
     this.tokens = Tokens(str)
     indents = IndentationProcessor()
     idx = 0
     this.s = str
 
-    while (unicodeProcessor.hasNext()) {
-      current_char = next_char
-      next_char = unicodeProcessor.get()
+    while (idx < unicodeProcessor.length) {
+      current_char = unicodeProcessor.get(idx)
+      next_char = unicodeProcessor.get(idx + 1)
       tokens.addChar(current_char)
       idx += 1
       if (isNewLine(tokens.sb)) {
@@ -37,32 +37,23 @@ case class Tokenizer() extends Lexer {
         if (nextString.isEmpty) {
           indents.updateLevel()
         }
-        else if (!indents.hasIndentation(nextString)) {
+        else if (!hasIndentation(nextString)) {
           val numOfDedent = indents.dropLevel()
-          tokens.add(idx, Dedent, numOfDedent)
+          tokens.add(idx, Dedent, numOfDedent, flushFlag = false)
         }
-        else if (indents.hasOnlyWhitespaces(nextString)) {
+        else if (hasOnlyWhitespaces(nextString)) {
           indents.updateLevel()
         }
         else {
           val numOfIndents = indents.countIndentation(nextString)
           val indentType = if (numOfIndents >= 0) Indent else Dedent
-          tokens.add(idx, indentType, numOfIndents)
+          tokens.add(idx, indentType, numOfIndents, flushFlag = false)
         }
-        if (isEndOfFile(s, nextString, idx)) {
-          tokens.dedentsToFlush = indents.dropLevel()
-          if (isTrivia(nextString)) {
-            tokens.lastLineBreak = idx - 1
-          } else {
-            tokens.lastLineBreak = -1
-          }
-        }
+        tokens.lastLineBreak = idx - 1
         tokens.dropStringBuilder()
       }
-      else if (isLongSymbol(tokens.sb + next_char)) {
+      else if (isLongSymbol(tokens.sb, next_char)) {
         tokens.addChar(next_char)
-        current_char = next_char
-        next_char = unicodeProcessor.get()
         idx += 1
         tokens.add(idx - 1, Symbol)
         tokens.updateState()
@@ -74,8 +65,6 @@ case class Tokenizer() extends Lexer {
       else if (isComment(tokens.sb)) {
         val extractedComment = extractComment()
         tokens.addToTrivia(extractedComment)
-        current_char = unicodeProcessor.get(extractedComment.length - 1) // TODO Fix
-        next_char = unicodeProcessor.get()
         idx += extractedComment.length
         tokens.dropStringBuilder()
 
@@ -84,12 +73,10 @@ case class Tokenizer() extends Lexer {
         tokens.add(idx - 1, BooleanLiteral)
         tokens.updateState()
       }
-      else if (isInteger(tokens.sb) && !isInteger(tokens.sb + next_char)) {
-        val suffix: String = s.slice(idx, idx + 3) // TODO Use Iterator
+      else if (isInteger(tokens.sb) && !isInteger(tokens.sb, next_char)) {
+        val suffix: String = s.slice(idx, idx + 3) // TODO Use Unicode
         if (isSuffix(suffix)) {
           tokens.addString(suffix)
-          current_char = unicodeProcessor.get(2) // TODO Fix
-          next_char = unicodeProcessor.get()
           idx += 3
         }
         tokens.add(idx - 1, IntegerLiteral)
@@ -97,8 +84,6 @@ case class Tokenizer() extends Lexer {
       }
       else if (isRuneStart(tokens.sb)) {
         val extractedRuneInterior: String = extractRune()
-        current_char = unicodeProcessor.get(extractedRuneInterior.length) // TODO Fix
-        next_char = unicodeProcessor.get()
         idx += extractedRuneInterior.length + 1
         tokens.updateState()
         tokens.addString(extractedRuneInterior)
@@ -111,10 +96,8 @@ case class Tokenizer() extends Lexer {
       }
       else if (isStringStart(tokens.sb)) {
         val extractedStringInterior: String = extractString()
-        current_char = unicodeProcessor.get(extractedStringInterior.length) // TODO Fix
-        next_char = unicodeProcessor.get()
         idx += extractedStringInterior.length + 1
-        tokens.updateState()
+        tokens.dropStringBuilder()
         tokens.addString(extractedStringInterior)
         if (!isStringInterior(extractedStringInterior)) {
           tokens.add(idx, Bad)
@@ -123,7 +106,7 @@ case class Tokenizer() extends Lexer {
         }
         tokens.updateState()
       }
-      else if (isKeyword(tokens.sb) && !isKeyword(tokens.sb + next_char) && !isIdentifier(tokens.sb + next_char) || idx == s.length) {
+      else if (isKeyword(tokens.sb) && !isKeyword(tokens.sb,  next_char) && !isIdentifier(tokens.sb, next_char) || idx == s.length) {
         if (isHardKeyword(tokens.sb)) {
           tokens.add(idx - 1, HardKeyword)
           tokens.updateState()
@@ -132,45 +115,31 @@ case class Tokenizer() extends Lexer {
           tokens.updateState()
         }
 
-      } else if (isIdentifier(tokens.sb) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
-        if (!isIdentifier(tokens.sb + next_char)) {
+      } else if (isIdentifier(tokens.sb)  && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
+        if (notNull(next_char) && !isIdentifier(tokens.sb + next_char)) {
           tokens.add(idx - 1, Identifier)
           tokens.updateState()
         }
       }
     }
-    tokens.flush(idx)
+    tokens.flush(indents.getCurrentIndentationLevel, if (tokens.lastLineBreak == s.length - 1) tokens.lastLineBreak else tokens.trueEnd + 1)
     return tokens.tokens
   }
 
-  private def lookup(s: String, i: Int): Option[Char] = {
-    if (i < s.length) {
-      return Some(s(i))
-    } else {
-      return None
-    }
-  }
+  private def extractString(): String = extract(stop=""""""")
 
-  private def extractString(): String = extract('"')
+  private def extractRune(): String = extract(stop="'")
 
-  private def extractRune(): String = extract("'"(0))
+  private def extractNextString(): String = extract(stop="\n")
 
-  private def extractNextString(): String = extract("\n"(0))
+  private def extractComment(): String = extract(stop="\n")
 
-  private def extractComment(): String = extract("\n"(0))
-
-  private def extract(StopChar: Char): String = {
-    var i: Int = idx
-    var extracted = ""
-    while (i < s.length && s(i) != StopChar) { // TODO use iterator
-      extracted += s(i)
-      i += 1
-    }
-    return extracted
-  }
-
-
+  override def extract(s: String = this.s, stop: String, idx: Int = this.idx: Int, function: (String, String) => Boolean = (x, y) => x != y): String = super.extract(s, stop, idx, function)
 }
+
+
+
+
 
 
 

@@ -1,12 +1,14 @@
 import Trivia.WHITESPACE
 
-case class IndentationProcessor() {
-  private val WHITESPACE: String = " "
-  private val TABULATION: String = """\t"""
 
+case class IndentationProcessor() extends Extractor {
+  
+  var lastLineBreak = 0
   private var currentIndentationLevel = 0
   private var currentIndentationLength = -1
-
+  
+  def getCurrentIndentationLevel: Int = currentIndentationLevel
+  
   def dropLevel(): Int = {
     val tmp = currentIndentationLevel
     currentIndentationLevel = 0
@@ -18,7 +20,7 @@ case class IndentationProcessor() {
     currentIndentationLength = currentIndentationLength
   }
   def countIndentation(s: String): Int = {
-    val indent: String = extractIndentation(s)
+    val indent: String = IndentationProcessor.extract(s)
     if (indent.length % 2 != 0) {
       updateLevel()
       return 0
@@ -44,25 +46,25 @@ case class IndentationProcessor() {
     }
     return 0
   }
+  
+}
 
-  def hasOnlyWhitespaces(s: String): Boolean = Trivia.WHITESPACE.matches(s)
+object IndentationProcessor extends Extractor:
+
+  private val WHITESPACE: String = " "
+  private val TABULATION: String = """\t"""
+
+  override def extract(s: String, stop: String = " ", idx: Int = 0, function: (String, String) => Boolean): String =
+    super.extract(s, " ", 0, (x, y) => x == y)
+
+  def hasOnlyWhitespaces (s: String): Boolean = Trivia.WHITESPACE.matches(s)
 
   def hasIndentation(s: String): Boolean = s.startsWith(WHITESPACE) || s.startsWith(TABULATION)
 
-  private def extractIndentation(s: String): String = {
-    var indentation: String = "" // TODO: Fix
-    var i = 0
-    while (s(i) == ' ') {
-      indentation += s(i)
-      i += 1
-    }
-    return indentation
-  }
-  
   def hasComment(s: String): Boolean = {
-    var i = extractIndentation(s).length
-    if (s(i) == '#') return true
-    return false
+    val i = extract(s).length
+    (s(i) == '#') 
   }
 
-}
+
+end IndentationProcessor

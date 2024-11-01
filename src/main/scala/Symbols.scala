@@ -38,8 +38,7 @@ case object Symbols {
   )
   def isShortSymbol(s: String): Boolean = shortSymbols.contains(s)
 
-  def isLongSymbol(s: String): Boolean =
-    longSymbols.contains(s)
+  def isLongSymbol(c: String, n:String): Boolean = if (n == null) false else longSymbols.contains(c + n)
 
   def getSymbol(symbol: String): Symbol = {
     if (symbol.length == 2) {
