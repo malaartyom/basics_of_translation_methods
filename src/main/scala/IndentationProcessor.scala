@@ -12,7 +12,7 @@ case class IndentationProcessor() extends Extractor {
   def dropLevel(): Int = {
     val tmp = currentIndentationLevel
     currentIndentationLevel = 0
-    return -tmp
+    -tmp
   }
 
   def updateLevel(): Unit = {
@@ -44,7 +44,7 @@ case class IndentationProcessor() extends Extractor {
       currentIndentationLevel = N
       return currentIndentationLevel - prevIndentationLevel
     }
-    return 0
+    0
   }
   
 }
@@ -63,7 +63,7 @@ object IndentationProcessor extends Extractor:
 
   def hasComment(s: String): Boolean = {
     val i = extract(s).length
-    (s(i) == '#') 
+    s(i) == '#' 
   }
 
 

@@ -7,6 +7,6 @@ trait Extractor {
       extracted += extractor.get(i)
       i += 1
     }
-    return extracted
+    extracted
   }
 }

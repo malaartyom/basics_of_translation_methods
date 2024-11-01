@@ -1,21 +1,32 @@
-import Trivia.{TRIVIA, WHITESPACE}
-import StringLiteral.STRING
+import Trivia.TRIVIA
 import syspro.tm.lexer.Token
 
 import scala.util.matching.Regex
 
 object Main {
   def main(args: Array[String]): Unit = {
-    var lexer = Tokenizer()
+    val lexer = Tokenizer()
+    val x = UnicodeProcessor("\uD835\uDEA8\u00AD\uD800\uDF41").length
+    println(x)
     syspro.tm.Tasks.Lexer.registerSolution(lexer)
     println(TRIVIA.matches("""
                              |      # Comment introduced identation level in the method body (EOF rule is not applicable here)""".stripMargin))
-    var s = """class Indent6
-              |  def memberIsAt2(): Boolean
-              |    return true
-              |    # The spaces in the following line are ignored for identation purposes,
-              |    # as per EOF rule
-              |    """.stripMargin
+    val s =
+      """class 𝚨­𐍁
+        |    def nameImplicit(): String
+        |        return "𝚨­𐍁"
+        |    def nameExͯplicit(): String
+        |        return "\U+1D6A8\U+00AD\U+10341"
+        |    def letterImplicit(): Rune
+        |        return '𝚨'
+        |    def letterExͯplicit(): Rune
+        |        return '\U+1D6A8'
+        |    def number﻿Value(): Int64
+        |        return 90
+        |    def numberImplicit(): Rune
+        |        return '𐍁'
+        |    def numberExͯplicit(): Rune
+        |        return '\U+10341'""".stripMargin
 
     println(s.length)
     println(s.slice(840, 890))
@@ -25,7 +36,7 @@ object Main {
     val INTEGER: Regex = "[0-9]+(i32|i64|u32|u64)?".r
   }
 
-  def printTokens(l: java.util.List[Token]): Unit = {
+  private def printTokens(l: java.util.List[Token]): Unit = {
     var i: Int = 0
     (0 until l.size())
       .foreach(i =>

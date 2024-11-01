@@ -1,13 +1,13 @@
 import IndentationProcessor.{hasIndentation, hasOnlyWhitespaces}
 import Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import PrimitiveTokens.{isComment, isEndOfFile, isIdentifier, isNewLine, isTrivia}
+import LiteralTokens.*
+import PrimitiveTokens.{isComment, isIdentifier, isNewLine}
+import Symbols.*
 import TokenType.*
-import syspro.tm.lexer.{Lexer, Token}
-import LiteralTokens.{notNull, *}
 import UnicodeProcessor.*
+import syspro.tm.lexer.{Lexer, Token}
 
 import java.util
-import Symbols.*
 
 
 case class Tokenizer() extends Lexer with Extractor{
@@ -84,8 +84,8 @@ case class Tokenizer() extends Lexer with Extractor{
       }
       else if (isRuneStart(tokens.sb)) {
         val extractedRuneInterior: String = extractRune()
-        idx += extractedRuneInterior.length + 1
-        tokens.updateState()
+        idx += UnicodeProcessor(extractedRuneInterior).length + 1
+        tokens.dropStringBuilder()
         tokens.addString(extractedRuneInterior)
         if (!isRuneInterior(extractedRuneInterior)) {
           tokens.add(idx - 1, Bad)
@@ -96,9 +96,11 @@ case class Tokenizer() extends Lexer with Extractor{
       }
       else if (isStringStart(tokens.sb)) {
         val extractedStringInterior: String = extractString()
-        idx += extractedStringInterior.length + 1
+        idx += UnicodeProcessor(extractedStringInterior).length
         tokens.dropStringBuilder()
         tokens.addString(extractedStringInterior)
+
+        idx += 1
         if (!isStringInterior(extractedStringInterior)) {
           tokens.add(idx, Bad)
         } else {
@@ -123,7 +125,7 @@ case class Tokenizer() extends Lexer with Extractor{
       }
     }
     tokens.flush(indents.getCurrentIndentationLevel, if (tokens.lastLineBreak == s.length - 1) tokens.lastLineBreak else tokens.trueEnd + 1)
-    return tokens.tokens
+    tokens.tokens
   }
 
   private def extractString(): String = extract(stop=""""""")

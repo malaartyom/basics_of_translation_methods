@@ -1,11 +1,12 @@
 import Identifier.IDENTIFIER
-import Trivia.{COMMENT, NEWLINE, TRIVIA, WHITESPACE}
+import LiteralTokens.isNull
+import Trivia.{COMMENT, NEWLINE, TRIVIA}
 
 case object PrimitiveTokens {
   
   def isTrivia(s: String): Boolean = TRIVIA.matches(s)
 
-  def isIdentifier(s: String): Boolean = IDENTIFIER.matches(s)
+  def isIdentifier(s: String, next: String = ""): Boolean = if (isNull(next)) false else IDENTIFIER.matches(s + next)
 
   def isComment(s: String): Boolean = COMMENT.matches(s)
 
