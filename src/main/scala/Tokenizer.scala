@@ -4,6 +4,7 @@ import TokenType.*
 import syspro.tm.lexer.{Lexer, Token}
 import LiteralTokens.*
 import IndentationProcessor.*
+import UnicodeProcessor._
 
 import java.util
 import Symbols.*
@@ -13,19 +14,22 @@ case class Tokenizer() extends Lexer {
   var tokens: Tokens = Tokens()
   private var indents = IndentationProcessor()
   var idx = 0
-  private var current_char: Char = '0'
-  private var next_char: Char = '0'
+  private var current_char: String = ""
+  private var next_char: String = ""
   private var s: String = ""
 
   override def lex(str: String): java.util.List[Token] = {
+    val unicodeProcessor = UnicodeProcessor(str)
+
+    next_char = unicodeProcessor.get()
     this.tokens = Tokens(str)
     indents = IndentationProcessor()
     idx = 0
     this.s = str
 
-    while (idx < s.length) {
-      current_char = s(idx)
-      next_char = lookup(s, idx + 1).getOrElse('?')
+    while (unicodeProcessor.hasNext()) {
+      current_char = next_char
+      next_char = unicodeProcessor.get()
       tokens.addChar(current_char)
       idx += 1
       if (isNewLine(tokens.sb)) {
@@ -57,6 +61,8 @@ case class Tokenizer() extends Lexer {
       }
       else if (isLongSymbol(tokens.sb + next_char)) {
         tokens.addChar(next_char)
+        current_char = next_char
+        next_char = unicodeProcessor.get()
         idx += 1
         tokens.add(idx - 1, Symbol)
         tokens.updateState()
@@ -68,6 +74,8 @@ case class Tokenizer() extends Lexer {
       else if (isComment(tokens.sb)) {
         val extractedComment = extractComment()
         tokens.addToTrivia(extractedComment)
+        current_char = unicodeProcessor.get(extractedComment.length - 1) // TODO Fix
+        next_char = unicodeProcessor.get()
         idx += extractedComment.length
         tokens.dropStringBuilder()
 
@@ -77,9 +85,11 @@ case class Tokenizer() extends Lexer {
         tokens.updateState()
       }
       else if (isInteger(tokens.sb) && !isInteger(tokens.sb + next_char)) {
-        val suffix: String = s.slice(idx, idx + 3)
+        val suffix: String = s.slice(idx, idx + 3) // TODO Use Iterator
         if (isSuffix(suffix)) {
           tokens.addString(suffix)
+          current_char = unicodeProcessor.get(2) // TODO Fix
+          next_char = unicodeProcessor.get()
           idx += 3
         }
         tokens.add(idx - 1, IntegerLiteral)
@@ -87,6 +97,8 @@ case class Tokenizer() extends Lexer {
       }
       else if (isRuneStart(tokens.sb)) {
         val extractedRuneInterior: String = extractRune()
+        current_char = unicodeProcessor.get(extractedRuneInterior.length) // TODO Fix
+        next_char = unicodeProcessor.get()
         idx += extractedRuneInterior.length + 1
         tokens.updateState()
         tokens.addString(extractedRuneInterior)
@@ -99,6 +111,8 @@ case class Tokenizer() extends Lexer {
       }
       else if (isStringStart(tokens.sb)) {
         val extractedStringInterior: String = extractString()
+        current_char = unicodeProcessor.get(extractedStringInterior.length) // TODO Fix
+        next_char = unicodeProcessor.get()
         idx += extractedStringInterior.length + 1
         tokens.updateState()
         tokens.addString(extractedStringInterior)
@@ -148,7 +162,7 @@ case class Tokenizer() extends Lexer {
   private def extract(StopChar: Char): String = {
     var i: Int = idx
     var extracted = ""
-    while (i < s.length && s(i) != StopChar) {
+    while (i < s.length && s(i) != StopChar) { // TODO use iterator
       extracted += s(i)
       i += 1
     }

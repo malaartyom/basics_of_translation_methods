@@ -36,17 +36,17 @@ case class Tokens(str: String = "") {
     leading_trivia_length += s.length
     trivia += s
   }
-  def addChar(char: Char): Unit = {
-    if (!isTrivia(char.toString)) {
-      sb += char
+  def addChar(str: String): Unit = {
+    if (!isTrivia(str)) {
+      sb += str
     }
-    else if (isNewLine(char.toString) || isComment(char.toString)) {
-      sb += char
-      trivia += char
+    else if (isNewLine(str) || isComment(str)) {
+      sb += str
+      trivia += str
       leading_trivia_length += 1
     }
-    if (isTrivia(char.toString) && !isNewLine(char.toString) && !isComment(char.toString)) {
-      trivia += char
+    if (isTrivia(str) && !isNewLine(str) && !isComment(str)) {
+      trivia += str
       leading_trivia_length += 1
     }
   }
