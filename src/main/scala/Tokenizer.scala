@@ -1,5 +1,5 @@
 import Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import PrimitiveTokens.{isComment, isIdentifier, isNewLine, isEndOfFile}
+import PrimitiveTokens.{isComment, isEndOfFile, isIdentifier, isNewLine, isTrivia}
 import TokenType.*
 import syspro.tm.lexer.{Lexer, Token}
 import LiteralTokens.*
@@ -47,10 +47,15 @@ case class Tokenizer() extends Lexer {
         }
         if (isEndOfFile(s, nextString, idx)) {
           tokens.dedentsToFlush = indents.dropLevel()
+          if (isTrivia(nextString)) {
+            tokens.lastLineBreak = idx - 1
+          } else {
+            tokens.lastLineBreak = -1
+          }
         }
         tokens.dropStringBuilder()
       }
-      else if (isLongSymbol(tokens.sb)) {
+      else if (isLongSymbol(tokens.sb + next_char)) {
         tokens.addChar(next_char)
         idx += 1
         tokens.add(idx - 1, Symbol)
@@ -120,7 +125,7 @@ case class Tokenizer() extends Lexer {
         }
       }
     }
-    tokens.flush()
+    tokens.flush(idx)
     return tokens.tokens
   }
 

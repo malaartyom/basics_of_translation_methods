@@ -10,7 +10,6 @@ case class IndentationProcessor() {
   def dropLevel(): Int = {
     val tmp = currentIndentationLevel
     currentIndentationLevel = 0
-    currentIndentationLength = -1
     return -tmp
   }
 
@@ -39,10 +38,8 @@ case class IndentationProcessor() {
     }
     else if (indent.length % currentIndentationLength == 0) {
       val N = indent.length / currentIndentationLength
-      if (N == 1) return 0
       val prevIndentationLevel = currentIndentationLevel
-      currentIndentationLevel += (indent.length / currentIndentationLength - 1)
-      currentIndentationLength = indent.length
+      currentIndentationLevel = N
       return currentIndentationLevel - prevIndentationLevel
     }
     return 0

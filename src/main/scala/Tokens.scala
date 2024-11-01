@@ -12,12 +12,14 @@ import PrimitiveTokens.isEndOfFile
 case class Tokens(str: String = "") {
   var tokens = new util.ArrayList[Token]()
   var dedentsToFlush = 0
+  var lastLineBreak = 0
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
 
   private var trivia: String = ""
   private var start = 0
   private var end = 0
+  private var trueEnd = 0
 
   var sb = ""
 
@@ -53,13 +55,24 @@ case class Tokens(str: String = "") {
     sb += s
   }
 
-  def flush(): Unit =
+  def flush(i: Int): Unit =
     var idx = 0
-    if (tokens.isEmpty) {
-      idx = 0
-    } else {
-
-      idx = (tokens.getLast.end + 1)
+    if (!tokens.isEmpty) {               // TODO: Причесать, выглядит ужасно 
+      if (!isSyntheticToken(tokens.getLast)) {
+        if (lastLineBreak == - 1) {
+          idx = tokens.getLast.end + 1 
+        }
+        else {
+          idx = lastLineBreak
+        }
+      }
+      else {
+        if (lastLineBreak == -1) {
+          
+        }
+        
+        idx = trueEnd + 1
+      }
     }
     add(idx + 1, Dedent, dedentsToFlush)
 
@@ -69,7 +82,7 @@ case class Tokens(str: String = "") {
 
 
   def add(idx: Int, tokenType: TokenType): Unit = {
-    var nextTrivia: String  = extractTillEnd(idx + 1)
+    val nextTrivia: String = extractTillEnd(idx + 1)
 
     if (tokens.isEmpty) {
       leading_trivia_length = 0
@@ -77,7 +90,7 @@ case class Tokens(str: String = "") {
     }
     else {
       leading_trivia_length = trivia.length
-      if (!isSynteticToken(tokens.getLast)) {
+      if (!isSyntheticToken(tokens.getLast)) {
         start = end + 1
       }
     }
@@ -86,8 +99,10 @@ case class Tokens(str: String = "") {
     if (isEndOfFile(str, nextTrivia, idx + 1) && isTrivia(nextTrivia) && !(isNewLine(nextTrivia))) {
       trailing_trivia_length = nextTrivia.length
       end = trailing_trivia_length + idx
-      trailing_trivia_length = 0
       trivia = ""
+    }
+    if (!isSyntheticToken(tokenType)) {
+      trueEnd = end 
     }
     tokens.add(tokenType match {
       case HardKeyword => new KeywordToken(start, end, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
@@ -95,7 +110,7 @@ case class Tokens(str: String = "") {
       case Identifier => new IdentifierToken(start, end, leading_trivia_length, trailing_trivia_length, sb, null)
       case Symbol => new SymbolToken(start, end, leading_trivia_length, trailing_trivia_length, Symbols.getSymbol(sb))
       case BooleanLiteral => new BooleanLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, LiteralTokens.getBoolean(sb))
-      case StringLiteral => new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
+      case StringLiteral => end = end - 1; new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
       case Indent => end = idx - 2; new IndentationToken(idx - 1, idx - 1, 0, 0, 1)
@@ -106,16 +121,17 @@ case class Tokens(str: String = "") {
         new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
-  def extractTillEnd(idx: Int): String = {
+  private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) {               // TODO: Fix
+    while (i < str.length) {               // TODO: Fix (using extract from ?tokenizer?) 
       extractedString += str(i)
       i += 1
     }
     return extractedString
   }
-  def isSynteticToken(token: Token) = {
-    token.isInstanceOf[IndentationToken]
-  }
+  private def isSyntheticToken(token: Token): Boolean = token.isInstanceOf[IndentationToken]
+
+  private def isSyntheticToken(token: TokenType): Boolean = token == Indent || token == Dedent
+
 }

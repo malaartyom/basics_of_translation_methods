@@ -1,4 +1,4 @@
-import Trivia.WHITESPACE
+import Trivia.{TRIVIA, WHITESPACE}
 import StringLiteral.STRING
 import syspro.tm.lexer.Token
 
@@ -7,13 +7,15 @@ import scala.util.matching.Regex
 object Main {
   def main(args: Array[String]): Unit = {
     var lexer = Tokenizer()
-//    syspro.tm.Tasks.Lexer.registerSolution(lexer)
-    println(lexer.lex(
-      """""".stripMargin))
-    var s = """class Indent5
+    syspro.tm.Tasks.Lexer.registerSolution(lexer)
+    println(TRIVIA.matches("""
+                             |      # Comment introduced identation level in the method body (EOF rule is not applicable here)""".stripMargin))
+    var s = """class Indent7
               |  def memberIsAt2(): Boolean
               |    return true
-              |      # Comment introduced identation level in the method body (EOF rule is not applicable here)""".stripMargin
+              |    if true
+              |        # All identation levels are closed per EOF rule
+              |""".stripMargin
 
     println(s.length)
     println(s.slice(840, 890))
