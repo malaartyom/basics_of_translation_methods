@@ -124,11 +124,22 @@ case class Tokenizer() extends Lexer with Extractor{
         }
       }
     }
-    tokens.flush(indents.getCurrentIndentationLevel, if (tokens.lastLineBreak == s.length - 1) tokens.lastLineBreak else tokens.trueEnd + 1)
+    val point = getPointToFlush
+    tokens.flush(indents.getCurrentIndentationLevel, point)
     tokens.tokens
   }
 
-  private def extractString(): String = extract(stop=""""""")
+  private def getPointToFlush: Int = {
+    if (tokens.lastLineBreak == s.length - 1) {
+      tokens.lastLineBreak
+    } else if (hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
+      tokens.lastLineBreak
+    } else {
+      tokens.trueEnd + 1
+    }
+  }
+
+  private def extractString(): String = extract(stop="\"")
 
   private def extractRune(): String = extract(stop="'")
 

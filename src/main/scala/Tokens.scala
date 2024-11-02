@@ -11,20 +11,17 @@ import PrimitiveTokens.isEndOfFile
 
 case class Tokens(str: String = "") {
   var tokens = new util.ArrayList[Token]()
-  var dedentsToFlush = 0
   var lastLineBreak = 0
+  var trueEnd = 0
+  var sb = ""
+
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
-
   private var trivia: String = ""
   private var start = 0
   private var end = 0
-  var trueEnd = 0
 
-  var sb = ""
-
-
-  def dropStringBuilder(): Unit = sb  = ""
+  def dropStringBuilder(): Unit = sb = ""
 
   def updateState(): Unit = {
     sb = ""
@@ -32,10 +29,12 @@ case class Tokens(str: String = "") {
     trailing_trivia_length = 0
     trivia = ""
   }
+
   def addToTrivia(s: String): Unit = {
     leading_trivia_length += s.length
     trivia += s
   }
+
   def addChar(str: String): Unit = {
     if (!isTrivia(str)) {
       sb += str
@@ -50,6 +49,7 @@ case class Tokens(str: String = "") {
       leading_trivia_length += 1
     }
   }
+  
 
   def addString(s: String): Unit = {
     sb += s
@@ -73,19 +73,19 @@ case class Tokens(str: String = "") {
     }
     else {
       leading_trivia_length = trivia.length
-      if (!isSyntheticToken(tokens.getLast)) {
+      if (!IndentationProcessor.isSyntheticToken(tokens.getLast)) {
         start = end + 1
       }
     }
 
     end = idx
-    if (isEndOfFile(str, nextTrivia, idx + 1) && isTrivia(nextTrivia) && !(isNewLine(nextTrivia))) {
+    if (isEndOfFile(str, nextTrivia, idx + 1) && isTrivia(nextTrivia) && !isNewLine(nextTrivia)) {
       trailing_trivia_length = nextTrivia.length
       end = trailing_trivia_length + idx
       trivia = ""
     }
-    if (!isSyntheticToken(tokenType)) {
-      trueEnd = end 
+    if (!IndentationProcessor.isSyntheticToken(tokenType)) {
+      trueEnd = end
     }
     tokens.add(tokenType match {
       case HardKeyword => new KeywordToken(start, end, leading_trivia_length, trailing_trivia_length, Keywords.getHardKeyword(sb))
@@ -97,24 +97,23 @@ case class Tokens(str: String = "") {
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
       case Indent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag), 0, 0, 1)
-      case Dedent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1,idx - toInt(!flushFlag), 0, 0, -1)
+      case Dedent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag), 0, 0, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)
         new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
+
   private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) {               // TODO: Fix (using extract from ?tokenizer?) 
+    while (i < str.length) { // TODO: Fix (using extract from ?tokenizer?) 
       extractedString += str(i)
       i += 1
     }
-    return extractedString
+    extractedString
   }
-  private def isSyntheticToken(token: Token): Boolean = token.isInstanceOf[IndentationToken]
-
-  private def isSyntheticToken(token: TokenType): Boolean = token == Indent || token == Dedent
+  
 
 }

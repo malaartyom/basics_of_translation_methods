@@ -1,4 +1,6 @@
 import Trivia.WHITESPACE
+import syspro.tm.lexer.{Token, IndentationToken}
+import TokenType.{Indent, Dedent}
 
 
 case class IndentationProcessor() extends Extractor {
@@ -65,6 +67,10 @@ object IndentationProcessor extends Extractor:
     val i = extract(s).length
     s(i) == '#' 
   }
+
+  def isSyntheticToken(token: Token): Boolean = token.isInstanceOf[IndentationToken]
+
+  def isSyntheticToken(token: TokenType): Boolean = token == Indent || token == Dedent
 
 
 end IndentationProcessor
