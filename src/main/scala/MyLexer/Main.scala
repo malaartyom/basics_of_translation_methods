@@ -28,13 +28,13 @@ object Main {
 //    printTokens(lexer.lex(s))
   }
 
-  private def printTokens(l: java.util.List[Token]): Unit = {
-    var i: Int = 0
-    (0 until l.size())
-      .foreach(i =>
-
-        print(l.get(i).start.toString + " " +  l.get(i).end.toString + " " + l.get(i).leadingTriviaLength.toString + " " + l.get(i).trailingTriviaLength + "\n")
-      )
-  }
+//  private def printTokens(l: java.util.List[Token]): Unit = {
+//    var i: Int = 0
+//    (0 until l.size())
+//      .foreach(i =>
+//
+//        print(l.get(i).start.toString + " " +  l.get(i).end.toString + " " + l.get(i).leadingTriviaLength.toString + " " + l.get(i).trailingTriviaLength + "\n")
+//      )
+//  }
 }
 
