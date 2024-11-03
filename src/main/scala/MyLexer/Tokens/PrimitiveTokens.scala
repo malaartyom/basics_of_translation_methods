@@ -1,7 +1,7 @@
 package MyLexer.Tokens
 
 import Identifier.IDENTIFIER
-import MyLexer.Tokens.Trivia.{COMMENT, NEWLINE, TRIVIA}
+import MyLexer.Tokens.Trivia.{CARRIAGE_RETURN, COMMENT, NEWLINE, TRIVIA}
 import LiteralTokens.isNull
 
 case object PrimitiveTokens {
@@ -15,6 +15,12 @@ case object PrimitiveTokens {
   def isNewLine(s: String): Boolean = NEWLINE.matches(s)
 
   def isEndOfFile(all_file: String, next_string: String, current_index: Int): Boolean = current_index + next_string.length >= all_file.length
+  
+  def isCarriageReturn(s: String): Boolean = CARRIAGE_RETURN.matches(s)
+
+  def isLongNewLine(s:String, next_char: String): Boolean =
+    if (isNull(next_char)) return false   
+    isCarriageReturn(s) && isNewLine(s + next_char)
 
 
 }

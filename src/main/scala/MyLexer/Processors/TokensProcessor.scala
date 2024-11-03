@@ -8,6 +8,8 @@ import MyLexer.Tokens.Symbols
 import MyLexer.Tokens.TokenType.{Symbol, HardKeyword,SoftKeyword,
 Indent,Dedent, Identifier, Bad, RuneLiteral, StringLiteral, BooleanLiteral, IntegerLiteral}
 import MyLexer.Tokens.TokenType
+import scala.collection.mutable
+import MyLexer.Tokens.TokenType
 import syspro.tm.lexer.*
 
 
@@ -43,7 +45,7 @@ case class TokensProcessor(str: String = "") extends Extractor {
     if (!isTrivia(str)) {
       sb += str
     }
-    else if (isNewLine(str) || isComment(str)) {
+    else if (isNewLine(str) || isComment(str) || isCarriageReturn(str)) {
       sb += str
       trivia += str
       leading_trivia_length += 1
@@ -59,13 +61,30 @@ case class TokensProcessor(str: String = "") extends Extractor {
     sb += s
   }
 
-  def flush(number: Int, place: Int = trueEnd + 1): Unit =
-    var idx = 0
-    add(place, Dedent, number, flushFlag = true)
+  def add(indents: mutable.Seq[Token]): Unit = {
+    indents.foreach(x => tokens.add(x))
+  }
 
-  def add(idx: Int, tokenType: TokenType, num: Int, flushFlag: Boolean): Unit =
-    val x = num.abs
-    for (_ <- 1 to x) add(idx, tokenType, flushFlag)
+  def flush(num: Int, stack: mutable.Stack[Token], place: Int = trueEnd + 1, length: Int): Unit = {
+    var 
+    i = num
+    while (i > 0) {
+      val indent = stack.pop()
+      val len = indent.end - indent.start
+      if (place + len <= length - 1) {
+        add(place, Dedent(len, place, place + len), flushFlag = true)
+      }
+      else {
+        add(place, Dedent(0, place + 1, place + 1), flushFlag = true)
+      }
+      i-=1
+    }
+  }
+
+
+//  def add(idx: Int, tokenType: TokenType, num: Int, flushFlag: Boolean): Unit =
+//    val x = num.abs
+//    for (_ <- 1 to x) add(idx, tokenType, flushFlag)
 
 
   def add(idx: Int, tokenType: TokenType, flushFlag: Boolean = false): Unit = {
@@ -74,15 +93,19 @@ case class TokensProcessor(str: String = "") extends Extractor {
     if (tokens.isEmpty) {
       leading_trivia_length = 0
       start = 0
+      end = idx
     }
     else {
       leading_trivia_length = trivia.length
       if (!IndentationProcessor.isSyntheticToken(tokens.getLast)) {
         start = end + 1
+        end = idx
+      } else {
+        end = idx
+        start = end - leading_trivia_length - sb.length + 1
       }
     }
 
-    end = idx
     if (isEndOfFile(str, nextTrivia, idx + 1) && isTrivia(nextTrivia) && !isNewLine(nextTrivia)) {
       trailing_trivia_length = nextTrivia.length
       end = trailing_trivia_length + idx
@@ -100,8 +123,8 @@ case class TokensProcessor(str: String = "") extends Extractor {
       case StringLiteral => end = end - 1; new StringLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb)
       case RuneLiteral => new RuneLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, sb.codePointAt(0))
       case Bad => new BadToken(start, end, leading_trivia_length, trailing_trivia_length)
-      case Indent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag), 0, 0, 1)
-      case Dedent => end = idx - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag), 0, 0, -1)
+      case Indent(len, start, end) => this.end = this.end - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag) + len, 0, 0, 1)
+      case Dedent(len, start, end) => this.end = this.end - 2; new IndentationToken(idx - toInt(!flushFlag) * 1, idx - toInt(!flushFlag) + len, 0, 0, -1)
       case IntegerLiteral =>
         val hasSuf: Boolean = hasSuffix(sb)
         val suffix: BuiltInType = getSuffix(sb, hasSuf)
