@@ -91,7 +91,7 @@ case class TokensProcessor(str: String = "") extends Extractor {
     val nextTrivia: String = extractTillEnd(idx + 1)
 
     if (tokens.isEmpty) {
-      leading_trivia_length = 0
+      leading_trivia_length = trivia.length
       start = 0
       end = idx
     }

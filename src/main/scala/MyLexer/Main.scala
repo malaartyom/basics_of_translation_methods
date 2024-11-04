@@ -9,11 +9,14 @@ object Main {
   def main(args: Array[String]): Unit = {
     val lexer = Tokenizer()
     val test = TestMode()
-    syspro.tm.Tasks.Lexer.registerSolution(lexer, test.forceLineTerminators(Mixed))
-    val s = """class Indent5
-        |  def memberIsAt2(): Boolean
-        |    return true
-        |      # Comment introduced identation level in the method body (EOF rule is not applicable here)""".stripMargin
+//    syspro.tm.Tasks.Lexer.registerSolution(lexer, test.forceLineTerminators(Mixed))
+    val s = """
+              |#xyz
+              |
+              |
+              |var x = 1; #jdijw
+              |  2hd  №№@@ 123
+              |    №""".stripMargin
     println(lexer.lex(s))
     printTokens(lexer.lex(s))
   }
