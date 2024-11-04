@@ -135,7 +135,7 @@ case class Tokenizer() extends Lexer with Extractor {
         }
 
       } else if (isIdentifier(tokens.sb) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
-        if (notNull(next_char) && !isIdentifier(tokens.sb + next_char)) {
+        if (!notNull(next_char) && isIdentifier(tokens.sb)) {
           tokens.add(idx - 1, Identifier)
           tokens.updateState()
         }

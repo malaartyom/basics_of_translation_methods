@@ -1,6 +1,7 @@
 package MyLexer
 
 import syspro.tm.lexer.Token
+import MyLexer.Tokenizer
 
 import scala.util.matching.Regex
 import syspro.tm.lexer.TestMode
@@ -17,8 +18,11 @@ object Main {
               |var x = 1; #jdijw
               |  2hd  №№@@ 123
               |    №""".stripMargin
-    println(lexer.lex(s))
-    printTokens(lexer.lex(s))
+
+    val y = """'\v' '\a' '\\' '5' 'd'
+'d'"""
+    println(lexer.lex(y))
+    printTokens(lexer.lex(y))
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
@@ -32,4 +36,3 @@ object Main {
   }
 }
 
-// parallel
