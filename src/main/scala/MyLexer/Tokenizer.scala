@@ -35,8 +35,10 @@ case class Tokenizer() extends Lexer with Extractor {
       idx += 1
       if (isNewLine(tokens.sb) || isLongNewLine(tokens.sb, next_char)) {
         tokens.lastLineBreak = idx - 1
+        tokens.lastSize = 0
 
         if (isLongNewLine(tokens.sb, next_char)) {
+          tokens.lastSize = 1
           tokens.addChar(next_char)
           idx += 1
           tokens.addToTrivia(current_char)
@@ -146,25 +148,21 @@ case class Tokenizer() extends Lexer with Extractor {
         tokens.updateState()
       }
     }
-    val point = getPointToFlush(tokens, s)
-    tokens.flush(indents.getCurrentIndentationLevel, indents.getStack, point, unicodeProcessor.length)
-    //    tokens.flush(indents.getCurrentIndentationLevel, point)
+    val (point, size) = getPointToFlush(tokens, s)
+    tokens.flush(indents.getCurrentIndentationLevel, size, point, unicodeProcessor.length)
     tokens.tokens
   }
 
-  private def getPointToFlush(tokens: TokensProcessor, s: String): Int = {
-    if (tokens.lastLineBreak == s.length - 1
-      ||
-      tokens.lastLineBreak == s.length - 2 &&
-        isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)
-    ) {
-      tokens.lastLineBreak
+  private def getPointToFlush(tokens: TokensProcessor, s: String): (Int, Int) = {
+    if (tokens.lastLineBreak == s.length - 1 || tokens.lastLineBreak == s.length - 2 &&
+        isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)) {
+      (tokens.lastLineBreak, tokens.lastSize)
     } else if (isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)
       && hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 2, s.length)) ||
       hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
-      tokens.lastLineBreak
+      (tokens.lastLineBreak, tokens.lastSize)
     } else {
-      tokens.trueEnd + 1
+      (tokens.trueEnd + 1, 0)
     }
   }
 

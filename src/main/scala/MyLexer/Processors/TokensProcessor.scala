@@ -20,12 +20,14 @@ case class TokensProcessor(str: String = "") extends Extractor {
   var lastLineBreak = 0
   var trueEnd = 0
   var sb = ""
+  var lastSize = 0
 
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
   private var trivia: String = ""
   private var start = 0
   private var end = 0
+  
 
   def dropStringBuilder(): Unit = sb = ""
 
@@ -65,14 +67,12 @@ case class TokensProcessor(str: String = "") extends Extractor {
     indents.foreach(x => tokens.add(x))
   }
 
-  def flush(num: Int, stack: mutable.Stack[Token], place: Int = trueEnd + 1, length: Int): Unit = {
+  def flush(num: Int, size: Int, place: Int = trueEnd + 1, fileLength: Int): Unit = {
     var 
     i = num
     while (i > 0) {
-      val indent = stack.pop()
-      val len = indent.end - indent.start
-      if (place + len <= length - 1) {
-        add(place, Dedent(len, place, place + len), flushFlag = true)
+      if (place + size <= fileLength - 1) {
+        add(place, Dedent(size, place, place + size), flushFlag = true)
       }
       else {
         add(place, Dedent(0, place + 1, place + 1), flushFlag = true)

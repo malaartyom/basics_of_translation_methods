@@ -6,33 +6,38 @@ import MyLexer.Tokenizer
 import scala.util.matching.Regex
 import syspro.tm.lexer.TestMode
 import syspro.tm.lexer.TestLineTerminators.{Native, LineFeed, CarriageReturnLineFeed, Mixed}
+
 object Main {
   def main(args: Array[String]): Unit = {
     val lexer = Tokenizer()
-    val test = TestMode()
-    syspro.tm.Tasks.Lexer.registerSolution(lexer, test.forceLineTerminators(CarriageReturnLineFeed))
-    val s = """class Indent6
-              |  def memberIsAt2(): Boolean
-              |    return true
-              |    # The spaces in the following line are ignored for identation purposes,
-              |    # as per EOF rule
-              |        """.stripMargin
+    var test = TestMode()
+    test = test.repeated(false)
+    test = test.parallel(true)
+    test = test.shuffled(true)
+    test = test.forceLineTerminators(Mixed)
+    syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+//    val s = """class Indent6
+//              |  def memberIsAt2(): Boolean
+//              |    return true
+//              |    # The spaces in the following line are ignored for identation purposes,
+//              |    # as per EOF rule
+//              |        """.stripMargin
+//
+//    val y = ""
 
-    val y = """' "\U+12DA \n \r \" \U+32AD" """
-
-    val z =
-      """
-        |
-        |@@@
-        |
-        |var z = 1
-        |123a12
-        |
-        |
-        |  x = 0
-        |    @@""".stripMargin
-    println(lexer.lex(y))
-    printTokens(lexer.lex(y))
+//    val z =
+//      """
+//        |
+//        |@@@
+//        |
+//        |var z = 1
+//        |123a12
+//        |
+//        |
+//        |  x = 0
+//        |    @@""".stripMargin
+//    println(lexer.lex(x))
+//    printTokens(lexer.lex(s))
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
