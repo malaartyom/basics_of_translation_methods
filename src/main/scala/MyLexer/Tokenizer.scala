@@ -1,14 +1,14 @@
 package MyLexer
 
 import MyLexer.Processors.IndentationProcessor.{getDedentType, getIndentType, hasIndentation, hasOnlyWhitespaces}
-import syspro.tm.lexer.{Lexer, Token}
 import MyLexer.Processors.{Extractor, IndentationProcessor, TokensProcessor, UnicodeProcessor}
 import MyLexer.Tokens.Bad.isBad
 import MyLexer.Tokens.Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import MyLexer.Tokens.LiteralTokens.{isBoolean, isInteger, isRuneInterior, isRuneStart, isStringInterior, isStringStart, isSuffix, notNull}
-import MyLexer.Tokens.PrimitiveTokens.{isCarriageReturn, isComment, isIdentifier, isLongNewLine, isNewLine}
+import MyLexer.Tokens.LiteralTokens.*
+import MyLexer.Tokens.PrimitiveTokens.{isComment, isIdentifier, isLongNewLine, isNewLine}
 import MyLexer.Tokens.Symbols.{isLongSymbol, isShortSymbol}
-import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, HardKeyword, Identifier, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import syspro.tm.lexer.{Lexer, Token}
 
 import java.util
 
@@ -57,7 +57,6 @@ case class Tokenizer() extends Lexer with Extractor {
           val numOfDedent = indents.dropLevel()
           val dedentList = indents.pushOrPop(idx, numOfDedent, dedentType)
           tokens.add(dedentList)
-          //          tokens.add(idx, Dedent, numOfDedent, flushFlag = false)
         }
         else if (hasOnlyWhitespaces(nextString)) {
           indents.updateLevel()
@@ -66,7 +65,6 @@ case class Tokenizer() extends Lexer with Extractor {
           val numOfIndents = indents.countIndentation(nextString)
           val indentsList = indents.pushOrPop(idx, numOfIndents, if (numOfIndents >= 0) indentType else dedentType)
           tokens.add(indentsList)
-          //          tokens.add(idx, indentType, numOfIndents, flushFlag = false)
         }
         tokens.dropStringBuilder()
       }
@@ -158,8 +156,8 @@ case class Tokenizer() extends Lexer with Extractor {
         isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)) {
       (tokens.lastLineBreak, tokens.lastSize)
     } else if (isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)
-      && hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 2, s.length)) ||
-      hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
+      && hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 2, s.length)) 
+      || hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
       (tokens.lastLineBreak, tokens.lastSize)
     } else {
       (tokens.trueEnd + 1, 0)

@@ -1,19 +1,13 @@
 package MyLexer.Processors
 
-import MyLexer.Tokens.Keywords
-import MyLexer.Tokens.LiteralTokens
-import MyLexer.Tokens.LiteralTokens.{hasSuffix, getSuffix, getInt, toInt}
+import MyLexer.Tokens.LiteralTokens.{getInt, getSuffix, hasSuffix, toInt}
 import MyLexer.Tokens.PrimitiveTokens.*
-import MyLexer.Tokens.Symbols
-import MyLexer.Tokens.TokenType.{Symbol, HardKeyword,SoftKeyword,
-Indent,Dedent, Identifier, Bad, RuneLiteral, StringLiteral, BooleanLiteral, IntegerLiteral}
-import MyLexer.Tokens.TokenType
-import scala.collection.mutable
-import MyLexer.Tokens.TokenType
+import MyLexer.Tokens.{Keywords, LiteralTokens, Symbols, TokenType}
+import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
 import syspro.tm.lexer.*
 
-
 import java.util
+import scala.collection.mutable
 
 case class TokensProcessor(str: String = "") extends Extractor {
   var tokens = new util.ArrayList[Token]()
@@ -81,12 +75,6 @@ case class TokensProcessor(str: String = "") extends Extractor {
     }
   }
 
-
-//  def add(idx: Int, tokenType: TokenType, num: Int, flushFlag: Boolean): Unit =
-//    val x = num.abs
-//    for (_ <- 1 to x) add(idx, tokenType, flushFlag)
-
-
   def add(idx: Int, tokenType: TokenType, flushFlag: Boolean = false): Unit = {
     val nextTrivia: String = extractTillEnd(idx + 1)
 
@@ -131,14 +119,12 @@ case class TokensProcessor(str: String = "") extends Extractor {
         new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
-
-//  override def extract(s: String, stop: String, idx: Int, function: (String, String) => Boolean): String =
-//    super.extract(s = this.str, stop = "", idx = idx, function)  // Slow
+  
 
   private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) { // TODO: Fix (using extract from ?tokenizer?)
+    while (i < str.length) {
       extractedString += str(i)
       i += 1
     }
