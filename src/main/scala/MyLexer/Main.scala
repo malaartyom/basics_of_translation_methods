@@ -10,17 +10,27 @@ object Main {
   def main(args: Array[String]): Unit = {
     val lexer = Tokenizer()
     val test = TestMode()
-//    syspro.tm.Tasks.Lexer.registerSolution(lexer, test.forceLineTerminators(Mixed))
-    val s = """
-              |#xyz
-              |
-              |
-              |var x = 1; #jdijw
-              |  2hd  №№@@ 123
-              |    №""".stripMargin
+    syspro.tm.Tasks.Lexer.registerSolution(lexer, test.forceLineTerminators(CarriageReturnLineFeed))
+    val s = """class Indent6
+              |  def memberIsAt2(): Boolean
+              |    return true
+              |    # The spaces in the following line are ignored for identation purposes,
+              |    # as per EOF rule
+              |        """.stripMargin
 
-    val y = """'\v' '\a' '\\' '5' 'd'
-'d'"""
+    val y = """' "\U+12DA \n \r \" \U+32AD" """
+
+    val z =
+      """
+        |
+        |@@@
+        |
+        |var z = 1
+        |123a12
+        |
+        |
+        |  x = 0
+        |    @@""".stripMargin
     println(lexer.lex(y))
     printTokens(lexer.lex(y))
   }

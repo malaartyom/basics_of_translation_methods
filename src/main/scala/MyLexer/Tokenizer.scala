@@ -134,16 +134,15 @@ case class Tokenizer() extends Lexer with Extractor {
           tokens.updateState()
         }
 
-      } else if (isIdentifier(tokens.sb) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
-        if (!notNull(next_char) && isIdentifier(tokens.sb)) {
-          tokens.add(idx - 1, Identifier)
-          tokens.updateState()
-        }
+      } else if (isIdentifier(tokens.sb) && !isIdentifier(tokens.sb, next_char) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
+        tokens.add(idx - 1, Identifier)
+        tokens.updateState()
+
       } else if (isBad(tokens.sb)) {
         val badToken = extractBad(s, idx)
+        idx += badToken.length
         tokens.addString(badToken)
         tokens.add(idx - 1, Bad)
-        idx += badToken.length
         tokens.updateState()
       }
     }
@@ -170,7 +169,7 @@ case class Tokenizer() extends Lexer with Extractor {
   }
 
 
-  private def extractBad(s: String, idx: Int): String = extract(s = s, idx = idx, stop="", function = (x, y) => isBad(x))
+  private def extractBad(s: String, idx: Int): String = extract(s = s, idx = idx, stop = "", function = (x, y) => isBad(x))
 
   private def extractString(s: String, idx: Int): String = extract(s = s, idx = idx, stop = "\"")
 
