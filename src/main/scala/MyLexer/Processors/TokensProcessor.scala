@@ -1,31 +1,27 @@
 package MyLexer.Processors
 
-import MyLexer.Tokens.Keywords
-import MyLexer.Tokens.LiteralTokens
-import MyLexer.Tokens.LiteralTokens.{hasSuffix, getSuffix, getInt, toInt}
+import MyLexer.Tokens.LiteralTokens.{getInt, getSuffix, hasSuffix, toInt}
 import MyLexer.Tokens.PrimitiveTokens.*
-import MyLexer.Tokens.Symbols
-import MyLexer.Tokens.TokenType.{Symbol, HardKeyword,SoftKeyword,
-Indent,Dedent, Identifier, Bad, RuneLiteral, StringLiteral, BooleanLiteral, IntegerLiteral}
-import MyLexer.Tokens.TokenType
-import scala.collection.mutable
-import MyLexer.Tokens.TokenType
+import MyLexer.Tokens.{Keywords, LiteralTokens, Symbols, TokenType}
+import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
 import syspro.tm.lexer.*
 
-
 import java.util
+import scala.collection.mutable
 
 case class TokensProcessor(str: String = "") extends Extractor {
   var tokens = new util.ArrayList[Token]()
   var lastLineBreak = 0
   var trueEnd = 0
   var sb = ""
+  var lastSize = 0
 
   private var leading_trivia_length = 0
   private var trailing_trivia_length = 0
   private var trivia: String = ""
   private var start = 0
   private var end = 0
+  
 
   def dropStringBuilder(): Unit = sb = ""
 
@@ -65,14 +61,12 @@ case class TokensProcessor(str: String = "") extends Extractor {
     indents.foreach(x => tokens.add(x))
   }
 
-  def flush(num: Int, stack: mutable.Stack[Token], place: Int = trueEnd + 1, length: Int): Unit = {
+  def flush(num: Int, size: Int, place: Int = trueEnd + 1, fileLength: Int): Unit = {
     var 
     i = num
     while (i > 0) {
-      val indent = stack.pop()
-      val len = indent.end - indent.start
-      if (place + len <= length - 1) {
-        add(place, Dedent(len, place, place + len), flushFlag = true)
+      if (place + size <= fileLength - 1) {
+        add(place, Dedent(size, place, place + size), flushFlag = true)
       }
       else {
         add(place, Dedent(0, place + 1, place + 1), flushFlag = true)
@@ -80,12 +74,6 @@ case class TokensProcessor(str: String = "") extends Extractor {
       i-=1
     }
   }
-
-
-//  def add(idx: Int, tokenType: TokenType, num: Int, flushFlag: Boolean): Unit =
-//    val x = num.abs
-//    for (_ <- 1 to x) add(idx, tokenType, flushFlag)
-
 
   def add(idx: Int, tokenType: TokenType, flushFlag: Boolean = false): Unit = {
     val nextTrivia: String = extractTillEnd(idx + 1)
@@ -131,14 +119,12 @@ case class TokensProcessor(str: String = "") extends Extractor {
         new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
-
-//  override def extract(s: String, stop: String, idx: Int, function: (String, String) => Boolean): String =
-//    super.extract(s = this.str, stop = "", idx = idx, function)  // Slow
+  
 
   private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) { // TODO: Fix (using extract from ?tokenizer?)
+    while (i < str.length) {
       extractedString += str(i)
       i += 1
     }

@@ -1,10 +1,10 @@
 package MyLexer.Tokens
 
 
-import MyLexer.Tokens.Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import MyLexer.Tokens.LiteralTokens.{isBoolean, isInteger, isRuneInterior, isRuneStart, isStringInterior, isStringStart, isSuffix, notNull}
-import MyLexer.Tokens.PrimitiveTokens.{isCarriageReturn, isComment, isIdentifier, isLongNewLine, isNewLine, isTrivia}
-import MyLexer.Tokens.Symbols.{isLongSymbol, isShortSymbol}
+import MyLexer.Tokens.Keywords.isKeyword
+import MyLexer.Tokens.LiteralTokens.{isBoolean, isInteger, isRuneStart, isStringStart}
+import MyLexer.Tokens.PrimitiveTokens.*
+import MyLexer.Tokens.Symbols.isShortSymbol
 
 
 case object Bad {

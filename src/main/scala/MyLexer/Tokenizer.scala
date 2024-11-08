@@ -1,14 +1,14 @@
 package MyLexer
 
 import MyLexer.Processors.IndentationProcessor.{getDedentType, getIndentType, hasIndentation, hasOnlyWhitespaces}
-import syspro.tm.lexer.{Lexer, Token}
 import MyLexer.Processors.{Extractor, IndentationProcessor, TokensProcessor, UnicodeProcessor}
 import MyLexer.Tokens.Bad.isBad
 import MyLexer.Tokens.Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import MyLexer.Tokens.LiteralTokens.{isBoolean, isInteger, isRuneInterior, isRuneStart, isStringInterior, isStringStart, isSuffix, notNull}
-import MyLexer.Tokens.PrimitiveTokens.{isCarriageReturn, isComment, isIdentifier, isLongNewLine, isNewLine}
+import MyLexer.Tokens.LiteralTokens.*
+import MyLexer.Tokens.PrimitiveTokens.{isComment, isIdentifier, isLongNewLine, isNewLine}
 import MyLexer.Tokens.Symbols.{isLongSymbol, isShortSymbol}
-import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, HardKeyword, Identifier, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import syspro.tm.lexer.{Lexer, Token}
 
 import java.util
 
@@ -35,8 +35,10 @@ case class Tokenizer() extends Lexer with Extractor {
       idx += 1
       if (isNewLine(tokens.sb) || isLongNewLine(tokens.sb, next_char)) {
         tokens.lastLineBreak = idx - 1
+        tokens.lastSize = 0
 
         if (isLongNewLine(tokens.sb, next_char)) {
+          tokens.lastSize = 1
           tokens.addChar(next_char)
           idx += 1
           tokens.addToTrivia(current_char)
@@ -55,7 +57,6 @@ case class Tokenizer() extends Lexer with Extractor {
           val numOfDedent = indents.dropLevel()
           val dedentList = indents.pushOrPop(idx, numOfDedent, dedentType)
           tokens.add(dedentList)
-          //          tokens.add(idx, Dedent, numOfDedent, flushFlag = false)
         }
         else if (hasOnlyWhitespaces(nextString)) {
           indents.updateLevel()
@@ -64,7 +65,6 @@ case class Tokenizer() extends Lexer with Extractor {
           val numOfIndents = indents.countIndentation(nextString)
           val indentsList = indents.pushOrPop(idx, numOfIndents, if (numOfIndents >= 0) indentType else dedentType)
           tokens.add(indentsList)
-          //          tokens.add(idx, indentType, numOfIndents, flushFlag = false)
         }
         tokens.dropStringBuilder()
       }
@@ -134,43 +134,38 @@ case class Tokenizer() extends Lexer with Extractor {
           tokens.updateState()
         }
 
-      } else if (isIdentifier(tokens.sb) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
-        if (!notNull(next_char) && isIdentifier(tokens.sb)) {
-          tokens.add(idx - 1, Identifier)
-          tokens.updateState()
-        }
+      } else if (isIdentifier(tokens.sb) && !isIdentifier(tokens.sb, next_char) && !isHardKeyword(tokens.sb) && !isSoftKeyword(tokens.sb)) {
+        tokens.add(idx - 1, Identifier)
+        tokens.updateState()
+
       } else if (isBad(tokens.sb)) {
         val badToken = extractBad(s, idx)
+        idx += badToken.length
         tokens.addString(badToken)
         tokens.add(idx - 1, Bad)
-        idx += badToken.length
         tokens.updateState()
       }
     }
-    val point = getPointToFlush(tokens, s)
-    tokens.flush(indents.getCurrentIndentationLevel, indents.getStack, point, unicodeProcessor.length)
-    //    tokens.flush(indents.getCurrentIndentationLevel, point)
+    val (point, size) = getPointToFlush(tokens, s)
+    tokens.flush(indents.getCurrentIndentationLevel, size, point, unicodeProcessor.length)
     tokens.tokens
   }
 
-  private def getPointToFlush(tokens: TokensProcessor, s: String): Int = {
-    if (tokens.lastLineBreak == s.length - 1
-      ||
-      tokens.lastLineBreak == s.length - 2 &&
-        isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)
-    ) {
-      tokens.lastLineBreak
+  private def getPointToFlush(tokens: TokensProcessor, s: String): (Int, Int) = {
+    if (tokens.lastLineBreak == s.length - 1 || tokens.lastLineBreak == s.length - 2 &&
+        isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)) {
+      (tokens.lastLineBreak, tokens.lastSize)
     } else if (isLongNewLine(s(tokens.lastLineBreak).toString, s(tokens.lastLineBreak + 1).toString)
-      && hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 2, s.length)) ||
-      hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
-      tokens.lastLineBreak
+      && hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 2, s.length)) 
+      || hasOnlyWhitespaces(s.slice(tokens.lastLineBreak + 1, s.length))) {
+      (tokens.lastLineBreak, tokens.lastSize)
     } else {
-      tokens.trueEnd + 1
+      (tokens.trueEnd + 1, 0)
     }
   }
 
 
-  private def extractBad(s: String, idx: Int): String = extract(s = s, idx = idx, stop="", function = (x, y) => isBad(x))
+  private def extractBad(s: String, idx: Int): String = extract(s = s, idx = idx, stop = "", function = (x, y) => isBad(x))
 
   private def extractString(s: String, idx: Int): String = extract(s = s, idx = idx, stop = "\"")
 

@@ -10,8 +10,6 @@ import scala.collection.mutable.ListBuffer
 
 case class IndentationProcessor() extends Extractor {
 
-
-  private val stack = mutable.Stack[Token]()
   var lastLineBreak = 0
   private var currentIndentationLevel = 0
   private var currentIndentationLength = -1
@@ -23,15 +21,12 @@ case class IndentationProcessor() extends Extractor {
     val returnList = ListBuffer[Token]()
     for (_ <- 1 to num.abs) {
       indentType match
-        case Indent(len, start, end) => stack.push(new IndentationToken(start, end, 0, 0, 1));returnList.append(new IndentationToken(start, end, 0, 0, 1))
-        case Dedent(len, start, end) => stack.pop(); returnList.append(new IndentationToken(start, end, 0, 0, -1))
+        case Indent(len, start, end) => returnList.append(new IndentationToken(start, end, 0, 0, 1))
+        case Dedent(len, start, end) => returnList.append(new IndentationToken(start, end, 0, 0, -1))
     }
     returnList
   }
-
-  def getStack: mutable.Stack[Token] = stack
-
-  def push(elem: Token): Unit = stack.push(elem)
+  
 
   def dropLevel(): Int = {
     val tmp = currentIndentationLevel
@@ -85,11 +80,7 @@ object IndentationProcessor extends Extractor:
   def hasOnlyWhitespaces(s: String): Boolean = Trivia.WHITESPACE.matches(s)
 
   def hasIndentation(s: String): Boolean = s.startsWith(WHITESPACE) || s.startsWith(TABULATION)
-
-  def hasComment(s: String): Boolean = {
-    val i = extract(s).length
-    s(i) == '#'
-  }
+  
 
   def isSyntheticToken(token: Token): Boolean = token.isInstanceOf[IndentationToken]
 

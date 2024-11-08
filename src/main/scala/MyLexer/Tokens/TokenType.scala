@@ -1,7 +1,5 @@
 package MyLexer.Tokens
 
-import syspro.tm.lexer.{IndentationToken, Token}
-
 enum TokenType{
   case Bad
   case BooleanLiteral
