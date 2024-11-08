@@ -1,11 +1,8 @@
-package MyLexer
-
-import syspro.tm.lexer.Token
 import MyLexer.Tokenizer
+import syspro.tm.lexer.TestLineTerminators.{CarriageReturnLineFeed, LineFeed, Mixed, Native}
+import syspro.tm.lexer.{TestMode, Token}
 
 import scala.util.matching.Regex
-import syspro.tm.lexer.TestMode
-import syspro.tm.lexer.TestLineTerminators.{Native, LineFeed, CarriageReturnLineFeed, Mixed}
 object Main {
   def main(args: Array[String]): Unit = {
     val lexer = Tokenizer()
