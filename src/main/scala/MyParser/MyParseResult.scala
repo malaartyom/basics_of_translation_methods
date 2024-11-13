@@ -9,16 +9,18 @@ import scala.jdk.CollectionConverters.*
 
 
 
-class CoolParseResult(rootKind: AnySyntaxKind, rootToken: Token) extends ParseResult {
-  private val rootNode: CoolSyntaxNode = CoolSyntaxNode(rootKind, rootToken)
+class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends ParseResult {
+  private val rootNode: MySyntaxNode = MySyntaxNode(rootKind, rootToken)
   private val invalid_ranges: ListBuffer[TextSpan] = ListBuffer[TextSpan]()
   private val diagnostic: ListBuffer[Diagnostic] = ListBuffer[Diagnostic]()
 
-  override def root(): CoolSyntaxNode = rootNode
+  override def root(): MySyntaxNode = rootNode
 
   override def invalidRanges(): util.Collection[TextSpan] = invalid_ranges.asJavaCollection
 
   override def diagnostics(): util.Collection[Diagnostic] = diagnostic.asJavaCollection
+  
+  def addToRoot(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = rootNode.add(mySyntaxNode)
 
 
 
