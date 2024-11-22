@@ -76,7 +76,7 @@ case class TokensProcessor(str: String = "") extends Extractor {
   }
 
   def add(idx: Int, tokenType: TokenType, flushFlag: Boolean = false): Unit = {
-    val nextTrivia: String = extractTillEnd(idx + 1)
+    val nextTrivia: String = extractTillEnd(idx + 1) // TODO : Fix it
 
     if (tokens.isEmpty) {
       leading_trivia_length = trivia.length

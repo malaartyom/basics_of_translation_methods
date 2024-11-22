@@ -21,6 +21,7 @@ class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends Pa
   override def diagnostics(): util.Collection[Diagnostic] = diagnostic.asJavaCollection
   
   def addToRoot(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = rootNode.add(mySyntaxNode)
+  
 
 
 

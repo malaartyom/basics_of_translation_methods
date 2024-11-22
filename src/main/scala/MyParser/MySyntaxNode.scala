@@ -4,7 +4,7 @@ import syspro.tm.parser.{AnySyntaxKind, SyntaxNode}
 
 import scala.collection.mutable.ListBuffer
 
-class MySyntaxNode(var1: AnySyntaxKind, var2: Token = null) extends SyntaxNode {
+class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends SyntaxNode {
   var tokenKind: AnySyntaxKind = var1
   var tokenType: Token = var2
   var children: ListBuffer[MySyntaxNode] = ListBuffer[MySyntaxNode]()
@@ -17,9 +17,13 @@ class MySyntaxNode(var1: AnySyntaxKind, var2: Token = null) extends SyntaxNode {
 
   override def slot(i: Int): SyntaxNode = children(i)
   
+  def apply(i: Int): MySyntaxNode = children(i)
+  
   def add(kind: AnySyntaxKind, token: Token = null): ListBuffer[MySyntaxNode] = children.append(MySyntaxNode(kind, token))
   
-  def add(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = children.append(mySyntaxNode) 
+  def add(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = children.append(mySyntaxNode)
+
+  override def toString: String = tokenKind.toString
 
 
 }
