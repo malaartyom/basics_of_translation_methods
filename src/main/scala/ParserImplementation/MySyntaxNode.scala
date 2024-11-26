@@ -24,6 +24,8 @@ class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends Synta
     children.append(MySyntaxNode(kind, token))
   
   def add(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = children.append(mySyntaxNode)
+
+  def addNull(num: Int) = for (x <- 1 to num) {children.append(null)}
   
   def addLeft(mySyntaxNode: MySyntaxNode): Unit = children.insert(0, mySyntaxNode)
 

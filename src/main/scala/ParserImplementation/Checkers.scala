@@ -137,6 +137,7 @@ object Checkers {
              GREATER_THAN | GREATER_THAN_EQUALS | AMPERSAND | BAR |
              CARET | LESS_THAN_LESS_THAN | GREATER_THAN_GREATER_THAN |
              PLUS | MINUS | ASTERISK | SLASH | PERCENT => true
+        case _=> false
 
   }
 
@@ -146,7 +147,7 @@ object Checkers {
       case keywordToken: KeywordToken => keywordToken.keyword match
         case IS => true
         case _ => false
-      case x if isPrimary(x) => true
+      case _ => false
 
   def isStatement(token: Token): Boolean =
     val tmp = token match {

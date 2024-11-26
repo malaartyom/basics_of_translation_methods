@@ -2,15 +2,14 @@ package ParserImplementation
 
 import LexerImplementation.Tokenizer
 import ParserImplementation.Checkers.*
-import ParserImplementation.MyParser.{getPriority, priority}
+import ParserImplementation.MyParser.priority
 import syspro.tm.lexer.Keyword.*
 import syspro.tm.lexer.Symbol.*
 import syspro.tm.lexer.{BooleanLiteralToken, IdentifierToken, IntegerLiteralToken, Keyword, KeywordToken, RuneLiteralToken, StringLiteralToken, Symbol, SymbolToken, Token}
 import syspro.tm.parser.SyntaxKind.*
-import syspro.tm.parser.{AnySyntaxKind, ParseResult, Parser}
+import syspro.tm.parser.{ParseResult, Parser}
 
-import scala.Predef.???
-import scala.Predef.*
+import scala.Predef.{???, *}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 
@@ -339,175 +338,187 @@ case class MyParser() extends Parser {
           node.add(CONTINUE, tokens(state.idx))
           state.idx += 1
           node
-        case IF =>
-          val node = MySyntaxNode(IF_STATEMENT)
-          node.add(IF, tokens(state.idx))
-          state.idx += 1
-          if (isExpression(tokens(state.idx))) {
-            node.add(matchExpression(tokens))
-          }
-          else {
-            // No expr after if
-          }
-          if (isIndent(tokens(state.idx))) {
-            node.add(INDENT, tokens(state.idx))
-            val list = MySyntaxNode(LIST)
-            state.idx += 1
-            while (isStatement(tokens(state.idx))) {
-              list.add(matchStatement(tokens))
-            }
-            node.add(list)
-            if (isDedent(tokens(state.idx))) {
-              node.add(DEDENT, tokens(state.idx))
-              state.idx += 1
-            } else {
-              ??? // There is no Dedent but is Indent
-            }
-          } else {
-            // No statement_block
-          }
-          if (isKeyword(tokens(state.idx), ELSE)) {
-            node.add(ELSE, tokens(state.idx))
-            state.idx += 1
-            if (isIndent(tokens(state.idx))) {
-              node.add(INDENT, tokens(state.idx))
-              state.idx += 1
-            } else {
-              // No statement_block after else
-            }
-
-            val list = MySyntaxNode(LIST)
-            while (isStatement(tokens(state.idx))) {
-              list.add(matchStatement(tokens))
-            }
-            node.add(list)
-            if (isDedent(tokens(state.idx))) {
-              node.add(DEDENT, tokens(state.idx))
-              state.idx += 1
-            } else {
-              // NO Dedent (((
-            }
-          }
-          node
-        case WHILE =>
-          val node = MySyntaxNode(WHILE_STATEMENT)
-          node.add(WHILE, tokens(state.idx))
-          state.idx += 1
-          if (isExpression(tokens(state.idx))) {
-            node.add(matchExpression(tokens))
-          }
-          else {
-            // No expr for while loop
-          }
-          if (isIndent(tokens(state.idx))) {
-            node.add(INDENT, tokens(state.idx))
-            state.idx += 1
-            val list = MySyntaxNode(LIST)
-            while (isStatement(tokens(state.idx))) {
-              list.add(matchStatement(tokens))
-            }
-            node.add(list)
-            if (isDedent(tokens(state.idx))) {
-              node.add(DEDENT, tokens(state.idx))
-              state.idx += 1
-            } else {
-              ??? // There is no Dedent but is Indent
-            }
-          }
-          node
-        case FOR =>
-          val node = MySyntaxNode(FOR_STATEMENT)
-          node.add(FOR, tokens(state.idx))
-          state.idx += 1
-          if (isPrimary(tokens(state.idx))) {
-            node.add(matchPrimary(tokens))
-          } else {
-            // BAD Situation
-          }
-
-          if (isKeyword(tokens(state.idx), IN)) {
-            node.add(IN, tokens(state.idx))
-            state.idx += 1
-          } else {
-            // Bad
-          }
-          if (isExpression(tokens(state.idx))) {
-            node.add(matchExpression(tokens))
-          }
-          if (isIndent(tokens(state.idx))) {
-            node.add(INDENT, tokens(state.idx))
-            state.idx += 1
-            val list = MySyntaxNode(LIST)
-            while (isStatement(tokens(state.idx))) {
-              list.add(matchStatement(tokens))
-            }
-            node.add(list)
-            if (isDedent(tokens(state.idx))) {
-              node.add(DEDENT, tokens(state.idx))
-              state.idx += 1
-            } else {
-              ??? // There is no Dedent but is Indent
-            }
-          }
-          node
+        case IF => matchIF(tokens)
+        case WHILE => matchWhile(tokens)
+        case FOR => matchFor(tokens)
         case _ => MySyntaxNode(BAD, tokens(state.idx))
       case _ => MySyntaxNode(BAD, tokens(state.idx))
   }
 
 
+  private def matchIF(tokens: Vector[Token]) = {
+    val node = MySyntaxNode(IF_STATEMENT)
+    node.add(IF, tokens(state.idx))
+    state.idx += 1
+    if (isExpression(tokens(state.idx))) {
+      node.add(matchExpression(tokens))
+    }
+    else {
+      node.add(null)
+      // No expr after if
+    }
+    if (isIndent(tokens(state.idx))) {
+      node.add(INDENT, tokens(state.idx))
+      val list = MySyntaxNode(LIST)
+      state.idx += 1
+      while (isStatement(tokens(state.idx))) {
+        list.add(matchStatement(tokens))
+      }
+      if (list.slotCount() == 0) node.add(null)
+      node.add(list)
+      if (isDedent(tokens(state.idx))) {
+        node.add(DEDENT, tokens(state.idx))
+        state.idx += 1
+      } else {
+        ??? // There is no Dedent but is Indent
+      }
+    } else {
+      node.addNull(3)
+      // No statement_block
+    }
+    if (isKeyword(tokens(state.idx), ELSE)) {
+      node.add(ELSE, tokens(state.idx))
+      state.idx += 1
+      if (isIndent(tokens(state.idx))) {
+        node.add(INDENT, tokens(state.idx))
+        state.idx += 1
+      } else {
+        // No statement_block after else
+      }
+
+      val list = MySyntaxNode(LIST)
+      while (isStatement(tokens(state.idx))) {
+        list.add(matchStatement(tokens))
+      }
+      node.add(list)
+      if (isDedent(tokens(state.idx))) {
+        node.add(DEDENT, tokens(state.idx))
+        state.idx += 1
+      } else {
+        // NO Dedent (((
+      }
+    }
+    node
+  }
+
+  private def matchWhile(tokens: Vector[Token]) = {
+    val node = MySyntaxNode(WHILE_STATEMENT)
+    node.add(WHILE, tokens(state.idx))
+    state.idx += 1
+    if (isExpression(tokens(state.idx))) {
+      node.add(matchExpression(tokens))
+    }
+    else {
+      // No expr for while loop
+    }
+    if (state.idx < tokens.length && isIndent(tokens(state.idx))) {
+      node.add(INDENT, tokens(state.idx))
+      state.idx += 1
+      val list = MySyntaxNode(LIST)
+      while (isStatement(tokens(state.idx))) {
+        list.add(matchStatement(tokens))
+      }
+      node.add(list)
+      if (isDedent(tokens(state.idx))) {
+        node.add(DEDENT, tokens(state.idx))
+        state.idx += 1
+      } else {
+        ??? // There is no Dedent but is Indent
+      }
+    }
+    else node.addNull(3)
+    node
+  }
+
+  private def matchFor(tokens: Vector[Token]) = {
+    val node = MySyntaxNode(FOR_STATEMENT)
+    node.add(FOR, tokens(state.idx))
+    state.idx += 1
+    if (isPrimary(tokens(state.idx))) {
+      node.add(matchPrimary(tokens))
+    } else {
+      // BAD Situation
+    }
+
+    if (isKeyword(tokens(state.idx), IN)) {
+      node.add(IN, tokens(state.idx))
+      state.idx += 1
+    } else {
+      // Bad
+    }
+    if (isExpression(tokens(state.idx))) {
+      node.add(matchExpression(tokens))
+    }
+    if (state.idx < tokens.length && isIndent(tokens(state.idx))) {
+      node.add(INDENT, tokens(state.idx))
+      state.idx += 1
+      val list = MySyntaxNode(LIST)
+      while (isStatement(tokens(state.idx))) {
+        list.add(matchStatement(tokens))
+      }
+      node.add(list)
+      if (isDedent(tokens(state.idx))) {
+        node.add(DEDENT, tokens(state.idx))
+        state.idx += 1
+      } else {
+        ??? // There is no Dedent but is Indent
+      }
+    } else {
+      node.addNull(3)
+    }
+    node
+  }
+
   def matchExpression(tokens: Vector[Token]): MySyntaxNode = {
-    val node = MySyntaxNode(BAD)
-    tokens(state.idx) match
-      case primaryExpr if isPrimary(primaryExpr) => matchPrimary(tokens)
-      case expr =>
-        val opStack = mutable.Stack[SymbolToken | KeywordToken]()
-        val nodeStack = mutable.Stack[MySyntaxNode]()
-        if (isUnary(tokens(state.idx))) {
-          val operation = matchUnary(tokens)
-          val node = matchPrimary(tokens)
-          operation.add(node)
-          nodeStack.push(operation)
-          // -this.x + 42 * 13
-          // a is b x
-        }
-        while (isExpressionContinue(tokens(state.idx))) {
-          // TODO: Remove pattern-matching
-          val currentPriority = {
-            tokens(state.idx) match
-              case symbol: SymbolToken => priority(symbol.symbol)
-              case keyword: KeywordToken => priority(keyword.keyword)
-          }
+    val opStack = mutable.Stack[SymbolToken | KeywordToken]()
+    val nodeStack = mutable.Stack[MySyntaxNode]()
 
-          val stackPriority = {
-            opStack.top match
-              case symbol: SymbolToken => priority(symbol.symbol)
-              case keyword: KeywordToken => priority(keyword.keyword)
-          }
-          if (stackPriority <= currentPriority || opStack.isEmpty) {
-            tokens(state.idx) match
-              case symbol: SymbolToken => opStack.push(symbol)
-              case keyword: KeywordToken => opStack.push(keyword)
-          } else {
-            // this.x * 12 + 30
-            val node = createOpNode(opStack.pop())
-            node.add(nodeStack.pop())
-            node.addLeft(nodeStack.pop()) // TODO: addLeft
-            nodeStack.push(node)
-            tokens(state.idx) match
-              case symbol: SymbolToken => opStack.push(symbol)
-              case keyword: KeywordToken => opStack.push(keyword)
-          }
-          nodeStack.push(matchPrimary(tokens))
-          state.idx += 1
-        }
+    if (isUnary(tokens(state.idx))) {
+      val operation = matchUnary(tokens)
+      val node = matchPrimary(tokens)
+      operation.add(node)
+      nodeStack.push(operation)
+      // -this.x + 42 * 13
+      // a is b x
+    } else if (isPrimary(tokens(state.idx))) nodeStack.push(matchPrimary(tokens))
+    while (state.idx < tokens.length && isExpressionContinue(tokens(state.idx))) {
+      // TODO: Remove pattern-matching
+      val currentPriority = {
+        tokens(state.idx) match
+          case symbol: SymbolToken => priority(symbol.symbol)
+          case keyword: KeywordToken => priority(keyword.keyword)
+      }
 
-        while (opStack.nonEmpty) {
-          val node = createOpNode(opStack.pop())
-          node.add(nodeStack.pop())
-          node.addLeft(nodeStack.pop())
-          nodeStack.push(node)
-        }
-        node
+      val stackPriority = if (opStack.isEmpty) 0 else {
+        opStack.top match
+          case symbol: SymbolToken => priority(symbol.symbol)
+          case keyword: KeywordToken => priority(keyword.keyword)
+      }
+      if (stackPriority <= currentPriority || opStack.isEmpty) {
+        tokens(state.idx) match
+          case symbol: SymbolToken => opStack.push(symbol)
+          case keyword: KeywordToken => opStack.push(keyword)
+      } else {
+        // this.x * 12 + 30
+        val node = createOpNode(opStack.pop())
+        node.add(nodeStack.pop())
+        node.addLeft(nodeStack.pop()) // TODO: addLeft
+        nodeStack.push(node)
+        tokens(state.idx) match
+          case symbol: SymbolToken => opStack.push(symbol)
+          case keyword: KeywordToken => opStack.push(keyword)
+      }
+      state.idx += 1
+      nodeStack.push(matchPrimary(tokens))
+    }
+
+    while (opStack.nonEmpty) {
+      val node = createOpNode(opStack.pop())
+      node.add(nodeStack.pop())
+      node.addLeft(nodeStack.pop())
+      nodeStack.push(node)
+    }
+    nodeStack.pop()
   }
 
   def matchUnary(tokens: Vector[Token]): MySyntaxNode = {
@@ -527,29 +538,33 @@ case class MyParser() extends Parser {
   }
 
   def createOpNode(token: Token): MySyntaxNode = {
-    var node = MySyntaxNode()
-    token match
+    val node: MySyntaxNode = token match
       case symbol: SymbolToken if isSymbol(symbol) =>
-        symbol match
-          case PLUS => node = MySyntaxNode(ADD_EXPRESSION)
-          case ASTERISK => node = MySyntaxNode(MULTIPLY_EXPRESSION)
-        node.add(symbol.symbol, token)
+        symbol.symbol match
+          case PLUS => MySyntaxNode(ADD_EXPRESSION)
+          case ASTERISK => MySyntaxNode(MULTIPLY_EXPRESSION)
+          case AMPERSAND_AMPERSAND => MySyntaxNode(LOGICAL_AND_EXPRESSION)
+          case BAR_BAR => MySyntaxNode(LOGICAL_OR_EXPRESSION)
+          case EQUALS_EQUALS => MySyntaxNode(EQUALS_EXPRESSION)
+          case EXCLAMATION_EQUALS => MySyntaxNode(NOT_EQUALS_EXPRESSION)
+          case LESS_THAN => MySyntaxNode(LESS_THAN_EXPRESSION)
+          case LESS_THAN_EQUALS => MySyntaxNode(LESS_THAN_OR_EQUAL_EXPRESSION)
+          case GREATER_THAN => MySyntaxNode(GREATER_THAN_EXPRESSION)
+          case GREATER_THAN_EQUALS => MySyntaxNode(GREATER_THAN_OR_EQUAL_EXPRESSION)
+          case AMPERSAND => MySyntaxNode(BITWISE_AND_EXPRESSION)
+          case BAR => MySyntaxNode(BITWISE_OR_EXPRESSION)
+          case CARET => MySyntaxNode(BITWISE_EXCLUSIVE_OR_EXPRESSION)
+          case LESS_THAN_LESS_THAN => MySyntaxNode(BITWISE_LEFT_SHIFT_EXPRESSION)
+          case GREATER_THAN_GREATER_THAN => MySyntaxNode(BITWISE_RIGHT_SHIFT_EXPRESSION)
+          case MINUS => MySyntaxNode(SUBTRACT_EXPRESSION)
+          case SLASH => MySyntaxNode(DIVIDE_EXPRESSION)
+          case PERCENT => MySyntaxNode(MODULO_EXPRESSION)
+
+      case keyword: KeywordToken if isKeyword(keyword, IS) => MySyntaxNode(IS_EXPRESSION)
+
+    node.add(token.asInstanceOf[SymbolToken].symbol, token)
     node
   }
-
-  //  def matchOperation(tokens: Vector[Token]): MySyntaxNode = {
-  //    var node = MySyntaxNode()
-  //    tokens(state.idx) match
-  //      case symbol: SymbolToken if isSymbol(symbol) =>
-  //        symbol match
-  //          case PLUS => node = MySyntaxNode(ADD_EXPRESSION)
-  //          case ASTERISK => node = MySyntaxNode(MULTIPLY_EXPRESSION)
-  //        node.add(symbol.symbol)
-  //          // TODO:
-  //    state.idx += 1 // ??? Maybe error
-  //    node
-  //  }
-
   def matchPrimary(tokens: Vector[Token]): MySyntaxNode = {
     matchDefaultPrimary(tokens)
   }
@@ -739,15 +754,5 @@ case object MyParser {
     AMPERSAND_AMPERSAND -> 10,
     BAR_BAR -> 11
   )
-
-  def getPriority(node: MySyntaxNode): Int = node.slot(0).token() match // TODO: Rename
-    case symbol: SymbolToken => priority(symbol.symbol)
-    case keyword: KeywordToken => priority(keyword.keyword)
-    case identifier: IdentifierToken if identifier.contextualKeyword != null => priority(identifier.contextualKeyword)
-
-  def getPriority(token: Token): Int = token match // TODO: Rename
-    case symbol: SymbolToken => priority(symbol.symbol)
-    case keyword: KeywordToken => priority(keyword.keyword)
-    case identifier: IdentifierToken if identifier.contextualKeyword != null => priority(identifier.contextualKeyword)
 
 }

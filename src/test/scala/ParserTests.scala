@@ -805,12 +805,191 @@ class ExpressionTest extends munit.FunSuite {
   test("+12") {
 
     val t = Tokenizer()
-    val s = "12 + 12"
+    val s = "+12"
     val tokens = t.lex(s)
-
     val p = ParserImplementation.MyParser()
     val result = p.matchExpression(tokens.asScala.toVector)
 
+    assertEquals(result.kind(), SyntaxKind.UNARY_PLUS_EXPRESSION)
+    assertEquals(result.slot(0).kind(), Symbol.PLUS)
+    assertEquals(result.slot(1).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+
+  }
+
+  test("Statement normal-2 if") {
+    val t = Tokenizer()
+    val s = "if A\nelse\n  var b = 3\n return b"
+    val tokens = t.lex(s)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.IF)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2), null)
+    assertEquals(result.slot(3), null)
+    assertEquals(result.slot(4), null)
+    assertEquals(result.slot(5).kind(), Keyword.ELSE)
+    assertEquals(result.slot(6).kind(), SyntaxKind.INDENT)
+    assertEquals(result.slot(7).kind, SyntaxKind.LIST)
+    assertEquals(result.slot(7).slot(0).kind, SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(7).slot(1).kind, SyntaxKind.RETURN_STATEMENT)
+    assertEquals(result.slot(8).kind, SyntaxKind.DEDENT)
+  }
+
+  test("Statement complicated if") {
+    val s = "if A\n  var b = 3\n return b\nelse\n  val c = 4\n  return c"
+    val t = Tokenizer()
+    val tokens = t.lex(s)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.IF)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INDENT)
+    assertEquals(result.slot(3).kind, SyntaxKind.LIST)
+    assertEquals(result.slot(3).slot(0).kind, SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(3).slot(1).kind, SyntaxKind.RETURN_STATEMENT)
+    assertEquals(result.slot(4).kind, SyntaxKind.DEDENT)
+    assertEquals(result.slot(5).kind(), Keyword.ELSE)
+    assertEquals(result.slot(6).kind(), SyntaxKind.INDENT)
+    assertEquals(result.slot(7).kind(), SyntaxKind.LIST)
+    assertEquals(result.slot(7).slot(0).kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(7).slot(1).kind(), SyntaxKind.RETURN_STATEMENT)
+    assertEquals(result.slot(8).kind(), SyntaxKind.DEDENT)
+  }
+
+  test("Statement simple while") {
+    val s = "while A"
+    val t = Tokenizer()
+    val tokens = t.lex(s)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.WHILE)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2), null)
+    assertEquals(result.slot(3), null)
+    assertEquals(result.slot(4), null)
+  }
+
+  test("Statement normal while") {
+    val s = "while A\n  var b = 2\n  val v = 4"
+    val t = Tokenizer()
+    val tokens = t.lex(s)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.WHILE)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INDENT)
+    assertEquals(result.slot(3).kind(), SyntaxKind.LIST)
+    assertEquals(result.slot(3).slot(0).kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(3).slot(1).kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(4).kind(), SyntaxKind.DEDENT)
+  }
+
+  test("Statement simple for") {
+    val code = "for i in range(10)"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.FOR_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.FOR)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2).kind, Keyword.IN)
+    assertEquals(result.slot(3).kind(), SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(4), null)
+    assertEquals(result.slot(5), null)
+    assertEquals(result.slot(6), null)
+  }
+
+  test("Statement complicated for") {
+    val code = "for i in range(10)\n  var c = 3\n  b.c[f]"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.FOR_STATEMENT)
+    assertEquals(result.slot(0).kind, Keyword.FOR)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2).kind, Keyword.IN)
+    assertEquals(result.slot(3).kind(), SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(4).kind(), SyntaxKind.INDENT)
+    assertEquals(result.slot(5).kind(), SyntaxKind.LIST)
+    assertEquals(result.slot(5).slot(0).kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
+    assertEquals(result.slot(5).slot(1).kind(), SyntaxKind.EXPRESSION_STATEMENT)
+    assertEquals(result.slot(6).kind(), SyntaxKind.DEDENT)
+  }
+
+  test("Statement expression test") {
+    val code = "b.c[f]"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
+    assertEquals(result.slotCount(), 1)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+  }
+
+  test("Statement expression confusing test") {
+    val code = "b.c[f] for i in range"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
+    assertEquals(result.slotCount(), 1)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+  }
+
+  test("Statement expression -10 test") {
+    val code = "-10"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchStatement(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
+    assertEquals(result.slotCount(), 1)
+    assertEquals(result.slot(0).kind, SyntaxKind.UNARY_MINUS_EXPRESSION)
+  }
+
+  test("Expression simple test-1") {
+    val code = "+123"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchExpression(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.UNARY_PLUS_EXPRESSION)
+    assertEquals(result.slotCount(), 2)
+    assertEquals(result.slot(0).kind(), Symbol.PLUS)
+    assertEquals(result.slot(1).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+  }
+
+  test("Expression simple test-2") {
+    val code = "-123"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchExpression(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.UNARY_MINUS_EXPRESSION)
+    assertEquals(result.slotCount(), 2)
+    assertEquals(result.slot(0).kind(), Symbol.MINUS)
+    assertEquals(result.slot(1).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+  }
+
+  test("Expression simple test-3") {
+    val code = "123 + 234"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = ParserImplementation.MyParser()
+    val result = p.matchExpression(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.ADD_EXPRESSION)
+    assertEquals(result.slotCount(), 3)
+    assertEquals(result.slot(0).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+    assertEquals(result.slot(1).kind(), Symbol.PLUS)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
   }
 }
 
