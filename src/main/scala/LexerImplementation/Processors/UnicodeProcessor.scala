@@ -1,4 +1,4 @@
-package MyLexer.Processors
+package LexerImplementation.Processors
 
 import java.*
 import java.text.Normalizer

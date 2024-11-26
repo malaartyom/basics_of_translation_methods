@@ -1,4 +1,4 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 import syspro.tm.lexer.Symbol
 

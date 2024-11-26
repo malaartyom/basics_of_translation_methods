@@ -1,4 +1,4 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 enum TokenType{
   case Bad

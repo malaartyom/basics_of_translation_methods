@@ -1,7 +1,7 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 import Identifier.IDENTIFIER
-import MyLexer.Tokens.Trivia.{CARRIAGE_RETURN, COMMENT, NEWLINE, TRIVIA}
+import LexerImplementation.Tokens.Trivia.{CARRIAGE_RETURN, COMMENT, NEWLINE, TRIVIA}
 import LiteralTokens.isNull
 
 case object PrimitiveTokens {

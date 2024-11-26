@@ -1,4 +1,4 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 import LiteralTokens.isNull
 import syspro.tm.lexer.Keyword

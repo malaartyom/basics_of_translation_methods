@@ -1,12 +1,14 @@
-package MyParser
+package ParserImplementation
 
-import syspro.tm.lexer.{BooleanLiteralToken, IdentifierToken, IndentationToken, Keyword, KeywordToken, RuneLiteralToken,
-  StringLiteralToken, Symbol, SymbolToken, Token, IntegerLiteralToken}
-import syspro.tm.lexer.Keyword.{VAL, VAR, *}
+import syspro.tm.lexer.{BooleanLiteralToken, IdentifierToken, IndentationToken, IntegerLiteralToken, Keyword, KeywordToken, RuneLiteralToken, StringLiteralToken, Symbol, SymbolToken, Token}
+import syspro.tm.lexer.Keyword.*
 import syspro.tm.lexer.Symbol.*
-import MyLexer.Tokens.LiteralTokens.isNull
+import LexerImplementation.Tokens.LiteralTokens.isNull
 
-object ParserUtils {
+import scala.collection.mutable
+
+object Checkers {
+
   def isTypeDefStart(token: Token): Boolean =
     token.isInstanceOf[IdentifierToken] && isTypeDefinitionKeyword(token.asInstanceOf[IdentifierToken].contextualKeyword)
 
@@ -70,7 +72,7 @@ object ParserUtils {
     token match
       case token1: KeywordToken =>
         token1.keyword match
-          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE => true
+          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE | DEF => true
           case _ => false
       case _ => false
 
@@ -95,13 +97,15 @@ object ParserUtils {
   def isDefinition(token: Token): Boolean = {
     token match
       case typeDef: IdentifierToken if isTypeDefStart(typeDef) => true
-      case funcDef: KeywordToken if isFunctionDefStart(funcDef) => true
+      case funcDef: KeywordToken if isFunctionDefStart(funcDef) || isKeyword(funcDef, DEF) => true
       case varDef: KeywordToken if isVariableDefStart(varDef) => true
       case parameterDef: IdentifierToken if isIdentifier(parameterDef) => true
+      case _ => false
   }
 
   def isPrimary(token: Token): Boolean = {
     token match
+      case nameExpression if isNameExpression(nameExpression) => true
       case identifierToken: IdentifierToken if identifierToken.contextualKeyword != null =>
         identifierToken.contextualKeyword match
           case NULL => true
@@ -118,9 +122,31 @@ object ParserUtils {
       case boolean: BooleanLiteralToken => true
       case string: StringLiteralToken => true
       case int: IntegerLiteralToken => true
-      case nameExpression if isNameExpression(nameExpression) => true
       case _ => false
   }
+
+  def isContinueOfPrimary(token: Token): Boolean = isSymbol(token, Symbol.OPEN_BRACKET) || isSymbol(token, Symbol.OPEN_PAREN) || isSymbol(token, Symbol.DOT)
+
+  def isUnary(token: Token): Boolean = isSymbol(token, PLUS) || isSymbol(token, MINUS) || isSymbol(token, TILDE) || isSymbol(token, EXCLAMATION)
+
+  def isOperation(token: Token): Boolean = {
+    token match
+      case symbolToken: SymbolToken => symbolToken.symbol match
+        case AMPERSAND_AMPERSAND | BAR_BAR | EQUALS_EQUALS |
+             EXCLAMATION_EQUALS | LESS_THAN | LESS_THAN_EQUALS |
+             GREATER_THAN | GREATER_THAN_EQUALS | AMPERSAND | BAR |
+             CARET | LESS_THAN_LESS_THAN | GREATER_THAN_GREATER_THAN |
+             PLUS | MINUS | ASTERISK | SLASH | PERCENT => true
+
+  }
+
+  def isExpressionContinue(token: Token): Boolean =
+    token match
+      case symbolToken: SymbolToken if isOperation(symbolToken) => true
+      case keywordToken: KeywordToken => keywordToken.keyword match
+        case IS => true
+        case _ => false
+      case x if isPrimary(x) => true
 
   def isStatement(token: Token): Boolean =
     val tmp = token match {

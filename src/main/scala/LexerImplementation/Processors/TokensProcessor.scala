@@ -1,9 +1,9 @@
-package MyLexer.Processors
+package LexerImplementation.Processors
 
-import MyLexer.Tokens.LiteralTokens.{getInt, getSuffix, hasSuffix, toInt}
-import MyLexer.Tokens.PrimitiveTokens.*
-import MyLexer.Tokens.{Keywords, LiteralTokens, Symbols, TokenType}
-import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import LexerImplementation.Tokens.LiteralTokens.{getInt, getSuffix, hasSuffix, toInt}
+import LexerImplementation.Tokens.PrimitiveTokens.*
+import LexerImplementation.Tokens.{Keywords, LiteralTokens, Symbols, TokenType}
+import LexerImplementation.Tokens.TokenType.{Bad, BooleanLiteral, Dedent, HardKeyword, Identifier, Indent, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
 import syspro.tm.lexer.*
 
 import java.util

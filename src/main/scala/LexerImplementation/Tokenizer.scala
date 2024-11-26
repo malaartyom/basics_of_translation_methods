@@ -1,13 +1,13 @@
-package MyLexer
+package LexerImplementation
 
-import MyLexer.Processors.IndentationProcessor.{getDedentType, getIndentType, hasIndentation, hasOnlyWhitespaces}
-import MyLexer.Processors.{Extractor, IndentationProcessor, TokensProcessor, UnicodeProcessor}
-import MyLexer.Tokens.Bad.isBad
-import MyLexer.Tokens.Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
-import MyLexer.Tokens.LiteralTokens.*
-import MyLexer.Tokens.PrimitiveTokens.{isComment, isIdentifier, isLongNewLine, isNewLine}
-import MyLexer.Tokens.Symbols.{isLongSymbol, isShortSymbol}
-import MyLexer.Tokens.TokenType.{Bad, BooleanLiteral, HardKeyword, Identifier, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
+import LexerImplementation.Processors.IndentationProcessor.{getDedentType, getIndentType, hasIndentation, hasOnlyWhitespaces}
+import LexerImplementation.Processors.{Extractor, IndentationProcessor, TokensProcessor, UnicodeProcessor}
+import LexerImplementation.Tokens.Bad.isBad
+import LexerImplementation.Tokens.Keywords.{isHardKeyword, isKeyword, isSoftKeyword}
+import LexerImplementation.Tokens.LiteralTokens.*
+import LexerImplementation.Tokens.PrimitiveTokens.{isComment, isIdentifier, isLongNewLine, isNewLine}
+import LexerImplementation.Tokens.Symbols.{isLongSymbol, isShortSymbol}
+import LexerImplementation.Tokens.TokenType.{Bad, BooleanLiteral, HardKeyword, Identifier, IntegerLiteral, RuneLiteral, SoftKeyword, StringLiteral, Symbol}
 import syspro.tm.lexer.{Lexer, Token}
 
 import java.util

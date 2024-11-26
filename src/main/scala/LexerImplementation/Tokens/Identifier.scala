@@ -1,4 +1,4 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 import scala.util.matching.Regex
 

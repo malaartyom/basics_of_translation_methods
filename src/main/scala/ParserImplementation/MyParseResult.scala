@@ -1,4 +1,4 @@
-package MyParser
+package ParserImplementation
 import syspro.tm.lexer.Token
 import syspro.tm.parser.{AnySyntaxKind, Diagnostic, ParseResult, TextSpan}
 

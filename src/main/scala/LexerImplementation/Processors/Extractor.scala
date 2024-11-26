@@ -1,4 +1,4 @@
-package MyLexer.Processors
+package LexerImplementation.Processors
 
 trait Extractor {
   def extract(s: String, stop: String, idx: Int, function: (String, String) => Boolean = (x, y) => x != y): String = {

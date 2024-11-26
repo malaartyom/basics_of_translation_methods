@@ -1,4 +1,4 @@
-package MyLexer.Tokens
+package LexerImplementation.Tokens
 
 import Boolean.BOOLEAN
 import Integer.{INTEGER, INT_SUFFIX}

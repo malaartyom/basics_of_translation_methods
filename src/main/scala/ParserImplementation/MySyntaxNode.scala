@@ -1,8 +1,9 @@
-package MyParser
+package ParserImplementation
 import syspro.tm.lexer.Token
 import syspro.tm.parser.{AnySyntaxKind, SyntaxNode}
 
 import scala.collection.mutable.ListBuffer
+
 
 class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends SyntaxNode {
   var tokenKind: AnySyntaxKind = var1
@@ -19,9 +20,12 @@ class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends Synta
   
   def apply(i: Int): MySyntaxNode = children(i)
   
-  def add(kind: AnySyntaxKind, token: Token = null): ListBuffer[MySyntaxNode] = children.append(MySyntaxNode(kind, token))
+  def add(kind: AnySyntaxKind, token: Token = null): ListBuffer[MySyntaxNode] = 
+    children.append(MySyntaxNode(kind, token))
   
   def add(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = children.append(mySyntaxNode)
+  
+  def addLeft(mySyntaxNode: MySyntaxNode): Unit = children.insert(0, mySyntaxNode)
 
   override def toString: String = tokenKind.toString
 

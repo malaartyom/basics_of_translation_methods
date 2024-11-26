@@ -1,4 +1,4 @@
-package MyLexer
+package LexerImplementation
 
 import syspro.tm.lexer.Token
 import syspro.tm.lexer.TestMode

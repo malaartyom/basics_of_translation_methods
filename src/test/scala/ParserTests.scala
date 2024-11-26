@@ -1,5 +1,5 @@
-import MyLexer.Tokenizer
-import MyParser.MySyntaxNode
+import LexerImplementation.Tokenizer
+import ParserImplementation.MySyntaxNode
 
 import syspro.tm.lexer.{IdentifierToken, SymbolToken, Symbol, Keyword}
 import syspro.tm.parser.{SyntaxKind, AnySyntaxKind}
@@ -10,9 +10,9 @@ class ParserTests extends munit.FunSuite {
   test("General Parser Tests") {
     val t = Tokenizer()
     val s = "class Identifier0<T <: U & V, G <: X & Y>  <: Object0"
-    val myParser = MyParser.MyParser()
+    val myParser = ParserImplementation.MyParser()
     val r = myParser.parse(s)
-    val firstTypeDef = r.root().slot(0)
+    val firstTypeDef = r.root().slot(0).slot(0)
 
     assertEquals(r.root().kind(), SyntaxKind.SOURCE_TEXT)
     assertEquals(firstTypeDef.kind, SyntaxKind.TYPE_DEFINITION)
@@ -59,7 +59,7 @@ class ParserTests extends munit.FunSuite {
 
     val t = Tokenizer()
     val s = "name0< ?name1, name2>"
-    val myParser = MyParser.MyParser()
+    val myParser = ParserImplementation.MyParser()
     val r = t.lex(s)
     println()
     val nameExpr = myParser.matchNameExpression(r.asScala.toVector)
@@ -86,7 +86,7 @@ class ParserTests extends munit.FunSuite {
     val tokens = t.lex(s)
 
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchFuncDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
@@ -104,7 +104,7 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "func"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchTypeParamDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
@@ -119,7 +119,7 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "T <: U & V & G"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchTypeParamDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
@@ -148,7 +148,7 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "T <: U<X, Y> & ?V & G"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchTypeParamDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
@@ -182,7 +182,7 @@ class ParamDefinitionTests extends munit.FunSuite {
     val tokens = t.lex(s)
 
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchParamDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.PARAMETER_DEFINITION)
@@ -196,12 +196,21 @@ class ParamDefinitionTests extends munit.FunSuite {
 
 
 class FunctionDefinitionsTests extends munit.FunSuite {
+  test("without specifiers") {
+    val t = Tokenizer()
+    val s = "def f()\n  break"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchFuncDef(tokens.asScala.toVector)
+
+  }
   test("Simple Definition") {
     val t = Tokenizer()
     val s = "override abstract virtual native def f()\n  break"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchFuncDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
@@ -227,7 +236,7 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     val s = "override abstract virtual native def f(x: name0, y: ?name1, z: name3<T>): name5<V> \n  break\n  continue\n  "
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchFuncDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
@@ -255,9 +264,9 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "var x"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchVariableDef(tokens.asScala.toVector)
-    
+
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
     assertEquals(r.slotCount(), 2)
     assertEquals(r.slot(0).kind(), Keyword.VAR)
@@ -270,7 +279,7 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "val x"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchVariableDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
@@ -285,7 +294,7 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "val x: name<T> =  name0"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchVariableDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
@@ -296,7 +305,7 @@ class VariableDefinitionTests extends munit.FunSuite {
     assertEquals(r.slot(3).kind(), SyntaxKind.GENERIC_NAME_EXPRESSION)
     assertEquals(r.slot(4).kind(), Symbol.EQUALS)
     assertEquals(r.slot(5).kind(), SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
-    
+
 
   }
 }
@@ -308,50 +317,50 @@ class StatementTests extends munit.FunSuite {
     val s = "break"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
-    
+
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.BREAK_STATEMENT)
     assertEquals(r.slot(0).kind(), Keyword.BREAK)
-    
+
   }
-  
+
   test("continue") {
 
     val t = Tokenizer()
     val s = "continue"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.CONTINUE_STATEMENT)
     assertEquals(r.slot(0).kind(), Keyword.CONTINUE)
-    
+
   }
-  
-  
-  test ("return") {
+
+
+  test("return") {
     val t = Tokenizer()
     val s = "return"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.RETURN_STATEMENT)
     assertEquals(r.slot(0).kind(), Keyword.RETURN)
   }
-  
+
   test("return x") {
     val t = Tokenizer()
     val s = "return x"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 2)
@@ -359,13 +368,13 @@ class StatementTests extends munit.FunSuite {
     assertEquals(r.slot(0).kind(), Keyword.RETURN)
     assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
   }
-  
+
   test("expression statement") {
     val t = Tokenizer()
     val s = "identifier"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 1)
@@ -379,7 +388,7 @@ class StatementTests extends munit.FunSuite {
     val s = "name0 = name1<T>"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
     assertEquals(r.kind(), SyntaxKind.ASSIGNMENT_STATEMENT)
     assertEquals(r.slotCount(), 3)
@@ -387,29 +396,29 @@ class StatementTests extends munit.FunSuite {
     assertEquals(r.slot(1).kind(), Symbol.EQUALS)
     assertEquals(r.slot(2).kind(), SyntaxKind.GENERIC_NAME_EXPRESSION)
   }
-  
+
   test("variable definition statement") {
 
     val t = Tokenizer()
     val s = "var x = name1"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
-    
+
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
     assertEquals(r.slotCount(), 1)
     assertEquals(r.slot(0).kind(), SyntaxKind.VARIABLE_DEFINITION)
-    
-    
+
+
   }
-  
+
   test("if statement") {
     val t = Tokenizer()
     val s = "if x\n  break\n  continue\n  return\nelse\n  break\n  continue\n  return"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.IF_STATEMENT)
@@ -424,13 +433,13 @@ class StatementTests extends munit.FunSuite {
     assertEquals(r.slot(7).kind(), SyntaxKind.LIST)
     assertEquals(r.slot(8).kind(), SyntaxKind.DEDENT)
   }
-  
+
   test("while statement") {
     val t = Tokenizer()
     val s = "while x\n  break\n  continue\n  return\n"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 5)
@@ -441,14 +450,14 @@ class StatementTests extends munit.FunSuite {
     assertEquals(r.slot(4).kind(), SyntaxKind.DEDENT)
 
   }
-  
+
   test("for statement") {
 
     val t = Tokenizer()
     val s = "for x in a\n  break\n  continue\n  return\n"
     val tokens = t.lex(s)
 
-    val p = MyParser.MyParser()
+    val p = ParserImplementation.MyParser()
     val r = p.matchStatement(tokens.asScala.toVector)
 
     assertEquals(r.slotCount(), 7)
@@ -459,10 +468,374 @@ class StatementTests extends munit.FunSuite {
     assertEquals(r.slot(4).kind(), SyntaxKind.INDENT)
     assertEquals(r.slot(5).kind(), SyntaxKind.LIST)
     assertEquals(r.slot(6).kind(), SyntaxKind.DEDENT)
-    
-    
+
+
+  }
+}
+
+class PrimaryTests extends munit.FunSuite {
+  test("this") {
+
+    val t = Tokenizer()
+    val s = "this"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.THIS_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), Keyword.THIS)
+
+  }
+
+  test("super") {
+
+    val t = Tokenizer()
+    val s = "super"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.SUPER_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), Keyword.SUPER)
+
+  }
+
+  test("null") {
+
+    val t = Tokenizer()
+    val s = "null"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.NULL_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), Keyword.NULL)
+
+  }
+
+  test("boolean true") {
+    val t = Tokenizer()
+    val s = "true"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.TRUE_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), SyntaxKind.BOOLEAN)
+
+  }
+
+  test("boolean false") {
+    val t = Tokenizer()
+    val s = "false"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.FALSE_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), SyntaxKind.BOOLEAN)
+
+  }
+  test("rune") {
+    val t = Tokenizer()
+    val s = "'a'"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.RUNE_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), SyntaxKind.RUNE)
+
+  }
+
+  test("string") {
+    val t = Tokenizer()
+    val s = """"xyz""""
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.STRING_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), SyntaxKind.STRING)
+  }
+
+  test("int") {
+    val t = Tokenizer()
+    val s = "42"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slot(0).kind(), SyntaxKind.INTEGER)
+  }
+
+  test("parenthesized expression") {
+    val t = Tokenizer()
+    val s = "(name)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.PARENTHESIZED_EXPRESSION)
+    assertEquals(r.slotCount(), 3)
+    assertEquals(r.slot(0).kind(), Symbol.OPEN_PAREN)
+    assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(r.slot(2).kind(), Symbol.CLOSE_PAREN)
+
+  }
+
+  test("invocation expression") {
+    val t = Tokenizer()
+    val s = "this(name0, name1)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(r.slotCount(), 4)
+    assertEquals(r.slot(0).kind(), SyntaxKind.THIS_EXPRESSION)
+    assertEquals(r.slot(1).kind(), Symbol.OPEN_PAREN)
+    assertEquals(r.slot(2).kind(), SyntaxKind.SEPARATED_LIST)
+
+    val sepList = r.slot(2)
+
+    assertEquals(sepList.slotCount(), 3)
+    assertEquals(sepList.slot(0).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(sepList.slot(1).kind, Symbol.COMMA)
+    assertEquals(sepList.slot(2).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+
+    assertEquals(r.slot(3).kind(), Symbol.CLOSE_PAREN)
+
+  }
+
+  test("index expression") {
+    val t = Tokenizer()
+    val s = "this[12]"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(r.slotCount(), 4)
+    assertEquals(r.slot(0).kind(), SyntaxKind.THIS_EXPRESSION)
+    assertEquals(r.slot(1).kind(), Symbol.OPEN_BRACKET)
+    assertEquals(r.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+    assertEquals(r.slot(3).kind(), Symbol.CLOSE_BRACKET)
+
+  }
+
+  test("member access expression") {
+
+    val t = Tokenizer()
+    val s = "this.a"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(r.slotCount(), 3)
+    assertEquals(r.slot(0).kind(), SyntaxKind.THIS_EXPRESSION)
+    assertEquals(r.slot(1).kind(), Symbol.DOT)
+    assertEquals(r.slot(2).kind(), SyntaxKind.IDENTIFIER)
+  }
+
+  test("this.a.b") {
+    val t = Tokenizer()
+    val s = "this.a.b"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind(), SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(r.slotCount(), 3)
+
+  }
+
+  test("Primary this[32].A") {
+    val t = Tokenizer()
+    val s = "this[32].A"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val r = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(r.kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(r.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(r.slot(1).kind, Symbol.DOT)
+    assertEquals(r.slot(2).kind, SyntaxKind.IDENTIFIER)
+    assertEquals(r.slot(0).slot(0).kind, SyntaxKind.THIS_EXPRESSION)
+    assertEquals(r.slot(0).slot(1).kind, Symbol.OPEN_BRACKET)
+    assertEquals(r.slot(0).slot(2).kind, SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+    assertEquals(r.slot(0).slot(3).kind, Symbol.CLOSE_BRACKET)
+  }
+
+  test("Primary this[32].A(23)") {
+    val t = Tokenizer()
+    val s = "this[32].A(23)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.THIS_EXPRESSION)
+  }
+
+  test("Primary this[32].A(23, b)") {
+    val t = Tokenizer()
+    val s = "this[32].A(23, b)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.THIS_EXPRESSION)
+
   }
 
 
-  
+  test("Primary a.b[20](30)") {
+    val t = Tokenizer()
+    val s = " a.b[20](30)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+  }
+
+  test("Primary a.b[20](30) 32") {
+    val t = Tokenizer()
+    val s = "a.b[20](30) 32"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+  }
+
+  test("Primary (asd)") {
+    val t = Tokenizer()
+    val s = "(asd)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.PARENTHESIZED_EXPRESSION)
+    assertEquals(result.slot(0).kind, Symbol.OPEN_PAREN)
+    assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(2).kind, Symbol.CLOSE_PAREN)
+  }
+
+  test("Primary (asd).b") {
+    val t = Tokenizer()
+    val s = "(asd).b"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+    assertEquals(result.kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.PARENTHESIZED_EXPRESSION)
+  }
+
+  test("Primary ?a.b[20](30)") {
+    val t = Tokenizer()
+    val s = "?a.b[20](30)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.OPTION_NAME_EXPRESSION)
+  }
+
+  test("Primary a<T>.b[20](30)") {
+    val t = Tokenizer()
+    val s = "a<T>.b[20](30)"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchPrimary(tokens.asScala.toVector)
+
+    assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
+    assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
+    assertEquals(result.slot(0).slot(0).slot(0).kind, SyntaxKind.GENERIC_NAME_EXPRESSION)
+  }
+
+}
+
+
+class ExpressionTest extends munit.FunSuite {
+  test("+12") {
+
+    val t = Tokenizer()
+    val s = "12 + 12"
+    val tokens = t.lex(s)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchExpression(tokens.asScala.toVector)
+
+  }
+}
+
+class BaseTests extends munit.FunSuite {
+  test("Base test 2 ") {
+    val t = Tokenizer()
+    val s = "class \uD835\uDEA8\u00AD\uD800\uDF41\n    def nameImplicit(): String\n        return \"\uD835\uDEA8\u00AD\uD800\uDF41\"\n    def nameExͯplicit(): String\n        return \"\\U+1D6A8\\U+00AD\\U+10341\"\n    def letterImplicit(): Rune\n        return '\uD835\uDEA8'\n    def letterExͯplicit(): Rune\n        return '\\U+1D6A8'\n    def number\uFEFFValue(): Int64\n        return 90\n    def numberImplicit(): Rune\n        return '\uD800\uDF41'\n    def numberExͯplicit(): Rune\n        return '\\U+10341'"
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+  }
+
+//  test("Base test 3") {
+//    val t = Tokenizer()
+//    val s = "class Indent1\n   def notMultipleOf2(): Boolean\n      return true"
+//    val tokens = t.lex(s)
+//
+//    println(tokens)
+//
+//    val p = ParserImplementation.MyParser()
+//    val result = p.parse(s)
+//
+//  }
 }

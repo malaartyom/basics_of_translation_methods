@@ -1,7 +1,7 @@
-package MyLexer.Processors
+package LexerImplementation.Processors
 
-import MyLexer.Tokens.TokenType.{Dedent, Indent}
-import MyLexer.Tokens.{TokenType, Trivia}
+import LexerImplementation.Tokens.TokenType.{Dedent, Indent}
+import LexerImplementation.Tokens.{TokenType, Trivia}
 import syspro.tm.lexer.{IndentationToken, Token}
 
 import scala.collection.mutable
