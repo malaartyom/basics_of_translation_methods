@@ -128,9 +128,9 @@ case class TokensProcessor(str: String = "") extends Extractor {
     while (i < str.length && flag) {
       extractedString += str(i)
       i += 1
-      if (!isTrivia(extractedString) && !isCarriageReturn(str(i).toString)){
-        flag = false
-      }
+//      if (!isTrivia(extractedString) && !isCarriageReturn(str(i).toString)){
+//        flag = false
+//      }
     }
     extractedString
   }
