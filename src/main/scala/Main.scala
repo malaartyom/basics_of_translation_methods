@@ -10,12 +10,13 @@ object Main {
     val lexer = Tokenizer()
     var test = TestMode()
 //    test = test.repeated(true)
-    test = test.parallel(true)
-    test = test.shuffled(true)
-    test = test.forceLineTerminators(Mixed)
-    syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+//    test = test.parallel(true)
+//    test = test.shuffled(true)
+//    test = test.forceLineTerminators(Mixed)
+//    syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
 
     var parser = MyParser()
+    syspro.tm.Tasks.Parser.registerSolution(parser)
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
