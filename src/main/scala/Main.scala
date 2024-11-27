@@ -1,18 +1,21 @@
 package LexerImplementation
 
+import ParserImplementation.MyParser
 import syspro.tm.lexer.Token
 import syspro.tm.lexer.TestMode
-import syspro.tm.lexer.TestLineTerminators.{Native, LineFeed, CarriageReturnLineFeed, Mixed}
+import syspro.tm.lexer.TestLineTerminators.{CarriageReturnLineFeed, LineFeed, Mixed, Native}
 
 object Main {
   def main(args: Array[String]): Unit = {
     val lexer = Tokenizer()
     var test = TestMode()
-    test = test.repeated(true)
+//    test = test.repeated(true)
     test = test.parallel(true)
     test = test.shuffled(true)
     test = test.forceLineTerminators(Mixed)
     syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+
+    var parser = MyParser()
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
