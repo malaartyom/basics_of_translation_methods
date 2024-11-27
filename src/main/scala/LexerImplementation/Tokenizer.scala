@@ -26,7 +26,6 @@ case class Tokenizer() extends Lexer with Extractor {
     var idx = 0
     val s = str
 
-    var longNewLine = false
 
     while (idx < unicodeProcessor.length) {
       current_char = unicodeProcessor.get(idx)

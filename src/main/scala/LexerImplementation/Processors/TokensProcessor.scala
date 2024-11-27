@@ -124,9 +124,13 @@ case class TokensProcessor(str: String = "") extends Extractor {
   private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) {
+    var flag = true
+    while (i < str.length && flag) {
       extractedString += str(i)
       i += 1
+      if (!isTrivia(extractedString) && !isCarriageReturn(str(i).toString)){
+        flag = false
+      }
     }
     extractedString
   }
