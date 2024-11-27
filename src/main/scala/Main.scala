@@ -16,8 +16,8 @@ object Main {
     test = test.forceLineTerminators(Mixed)
     syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
 
-    var parser = MyParser()
-    syspro.tm.Tasks.Parser.registerSolution(parser)
+//    var parser = MyParser()
+//    syspro.tm.Tasks.Parser.registerSolution(parser)
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
