@@ -129,10 +129,10 @@ case class TokensProcessor(str: String = "") extends Extractor {
     var flag = true
     while (i < str.length && flag) {
       extractedString += str(i)
-      i += 1
       if (isTrivia(extractedString) || isCarriageReturn(str(i).toString)) {
         flag = true
       } else flag = false
+      i += 1
 
     }
     extractedString

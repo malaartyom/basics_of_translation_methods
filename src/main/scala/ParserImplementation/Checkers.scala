@@ -72,7 +72,7 @@ object Checkers {
     token match
       case token1: KeywordToken =>
         token1.keyword match
-          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE | DEF => true
+          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE => true
           case _ => false
       case _ => false
 

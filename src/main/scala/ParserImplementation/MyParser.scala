@@ -56,7 +56,9 @@ case class MyParser() extends Parser {
 
     if (isTypeDefStart(tokens(state.idx))) {
       val terminal = matchTypeDefStart(tokens)
-      node.add(terminal, tokens(state.idx))
+      val token = tokens(state.idx)
+      val newToken = KeywordToken(token.start, token.end, token.leadingTriviaLength, token.trailingTriviaLength, token.asInstanceOf[IdentifierToken].contextualKeyword)
+      node.add(terminal, newToken) // TODO: Func in state
       state.idx += 1
     } else {
       println(tokens(state.idx))
@@ -84,7 +86,7 @@ case class MyParser() extends Parser {
           if (isTypeParameterDef(tokens(state.idx))) {
             sepList.add(matchTypeParamDef(tokens))
           } else {
-            // TODO: что-то хуёвое надо пропустить запятую и дальше парсить
+            // TODO: что-то плохое надо пропустить запятую и дальше парсить
           }
         }
         node.add(sepList)
@@ -94,10 +96,14 @@ case class MyParser() extends Parser {
         node.add(Symbol.GREATER_THAN, tokens(state.idx))
         state.idx += 1
       }
+    } else {
+      node.addNull(3)
     }
     if (isTypeBound(tokens(state.idx))) {
       node.add(matchTypeBound(tokens, state))
       state.drop()
+    } else {
+      node.addNull(1)
     }
     if (state.idx < tokens.length && isIndent(tokens(state.idx))) { // TODO: Do same thing with other conditions
       node.add(INDENT, tokens(state.idx))
@@ -114,6 +120,7 @@ case class MyParser() extends Parser {
         // Нет Dedenta но есть Indent очеьн плохо
       }
     } else {
+      node.addNull(3)
       // Empty member block
     }
     node
@@ -123,13 +130,15 @@ case class MyParser() extends Parser {
 
   def matchFuncDef(tokens: Vector[Token]): MySyntaxNode = {
     val node = MySyntaxNode(FUNCTION_DEFINITION)
+    val list = MySyntaxNode(LIST)
     while (isFunctionDefStart(tokens(state.idx))) {
-      node.add(matchFuncDefStart(tokens))
+      list.add(matchFuncDefStart(tokens))
     }
-    //    if (isKeyword(tokens(state.idx), DEF)) {
-    //      node.add(DEF, tokens(state.idx)) // TODO: DEF instead of keyword.DEF
-    //      state.idx += 1
-    //    }
+    node.add(list)
+    if (isKeyword(tokens(state.idx), DEF)) {
+      node.add(DEF, tokens(state.idx)) 
+      state.idx += 1
+    }
     if (isIdentifier(tokens(state.idx))) {
       node.add(IDENTIFIER, tokens(state.idx))
       state.idx += 1
@@ -161,6 +170,8 @@ case class MyParser() extends Parser {
         }
       }
       node.add(sepList)
+    } else {
+      node.addNull(1)
     }
 
     if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
@@ -176,8 +187,10 @@ case class MyParser() extends Parser {
       if (isNameExpression(tokens(state.idx))) {
         node.add(matchNameExpression(tokens))
       } else {
-        // Не хватает типа. Короче какая-то хуета
+        // Не хватает типа. Короче что-то плохое
       }
+    } else {
+      node.addNull(2)
     }
 
     if (isIndent(tokens(state.idx))) {
@@ -203,7 +216,7 @@ case class MyParser() extends Parser {
     tokens(state.idx) match
       case keyword: KeywordToken =>
         keyword.keyword match
-          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE | DEF => node = MySyntaxNode(keyword.keyword, tokens(state.idx));
+          case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE => node = MySyntaxNode(keyword.keyword, tokens(state.idx));
       case _ =>
     state.idx += 1
     node
@@ -308,7 +321,7 @@ case class MyParser() extends Parser {
           if (isExpression(tokens(state.idx))) {
             node.add(matchExpression(tokens))
           } else {
-            // хуйня
+            // плохо
           }
         } else {
           node = MySyntaxNode(EXPRESSION_STATEMENT)
@@ -565,6 +578,7 @@ case class MyParser() extends Parser {
     node.add(token.asInstanceOf[SymbolToken].symbol, token)
     node
   }
+
   def matchPrimary(tokens: Vector[Token]): MySyntaxNode = {
     matchDefaultPrimary(tokens)
   }
@@ -714,6 +728,7 @@ case class MyParser() extends Parser {
 
 
   override def parse(s: String): ParseResult = {
+    state.idx = 0
     val lexer = Tokenizer()
     val tokens: Vector[Token] = lexer.lex(s).asScala.toVector
     val parseResult = MyParseResult(SOURCE_TEXT)
