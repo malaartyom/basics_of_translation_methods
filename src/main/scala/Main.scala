@@ -1,6 +1,7 @@
 package LexerImplementation
 
 import ParserImplementation.MyParser
+import LexerImplementation.Processors.UnicodeProcessor
 import syspro.tm.lexer.Token
 import syspro.tm.lexer.TestMode
 import syspro.tm.lexer.TestLineTerminators.{CarriageReturnLineFeed, LineFeed, Mixed, Native}
@@ -11,10 +12,11 @@ object Main {
     var test = TestMode()
 //    test = test.repeated(true)
     test = test.strict(true)
-    test = test.parallel(true)
+//    test = test.parallel(true)
     test = test.shuffled(true)
     test = test.forceLineTerminators(Mixed)
     syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+
 
 //    var parser = MyParser()
 //    syspro.tm.Tasks.Parser.registerSolution(parser)
