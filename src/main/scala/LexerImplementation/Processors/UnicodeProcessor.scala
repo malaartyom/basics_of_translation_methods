@@ -1,8 +1,6 @@
 package LexerImplementation.Processors
 
 
-import LexerImplementation.Processors.UnicodeProcessor.unescape
-
 import java.*
 import java.text.Normalizer
 import scala.jdk.CollectionConverters.*
@@ -11,7 +9,7 @@ import scala.util.matching.Regex
 case class UnicodeProcessor(str: String = "") {
 
   private val codePoints: List[Integer] = Normalizer.
-    normalize(unescape(str), Normalizer.Form.NFC).codePoints().iterator().asScala.toList
+    normalize(str, Normalizer.Form.NFC).codePoints().iterator().asScala.toList
 
 
   def get(idx: Int): String = {

@@ -101,7 +101,7 @@ case class Tokenizer() extends Lexer with Extractor {
         val extractedRuneInterior: String = extractRune(s, idx)
         idx += UnicodeProcessor(extractedRuneInterior).length + 1
         tokens.dropStringBuilder()
-        tokens.addString(extractedRuneInterior)
+        tokens.addString(UnicodeProcessor.unescape(extractedRuneInterior))
         if (!isRuneInterior(extractedRuneInterior)) {
           tokens.add(idx - 1, Bad)
         } else {
@@ -113,7 +113,7 @@ case class Tokenizer() extends Lexer with Extractor {
         val extractedStringInterior: String = extractString(s, idx)
         idx += UnicodeProcessor(extractedStringInterior).length
         tokens.dropStringBuilder()
-        tokens.addString(extractedStringInterior)
+        tokens.addString(UnicodeProcessor.unescape(extractedStringInterior))
 
         idx += 1
         if (!isStringInterior(extractedStringInterior)) {
