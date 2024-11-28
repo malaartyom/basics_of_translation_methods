@@ -119,17 +119,26 @@ case class TokensProcessor(str: String = "") extends Extractor {
         new IntegerLiteralToken(start, end, leading_trivia_length, trailing_trivia_length, suffix, hasSuf, getInt(sb, hasSuf))
     })
   }
-  
+
+
+  private def extractNextTrivia(idx: Int): String = extract(s = this.str, stop = "", idx = idx, function = (x, y) => (isTrivia(x) || isCarriageReturn(x)))
 
   private def extractTillEnd(idx: Int): String = {
     var i = idx
     var extractedString = ""
-    while (i < str.length) {
+    var flag = true
+    while (i < str.length && flag) {
       extractedString += str(i)
       i += 1
+      if (isTrivia(extractedString) || isCarriageReturn(str(i).toString)) {
+        flag = true
+      } else flag = false
+
     }
     extractedString
   }
+
+  override def extract(s: String, stop: String, idx: Int, function: (String, String) => Boolean): String = super.extract(s, stop, idx, function)
 
 
 }

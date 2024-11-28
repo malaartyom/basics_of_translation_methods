@@ -14,11 +14,11 @@ object Main {
     test = test.strict(true)
 //    test = test.parallel(true)
     test = test.shuffled(true)
-    test = test.forceLineTerminators(Mixed)
+    test = test.forceLineTerminators(LineFeed)
     syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
 
 
-//    var parser = MyParser()
+    var parser = MyParser()
 //    syspro.tm.Tasks.Parser.registerSolution(parser)
   }
 
