@@ -10,7 +10,9 @@ class State {
   var length = 0
   private var openLessThan = false
   private var openParen = false
-  private var openBracket = false 
+  private var openBracket = false
+
+  var indentLevel = 0
   
   var buffOfNodes: Vector[MySyntaxNode] = Vector[MySyntaxNode]()
   

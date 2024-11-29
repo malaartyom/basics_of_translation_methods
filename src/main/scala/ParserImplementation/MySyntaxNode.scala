@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends SyntaxNode {
   var tokenKind: AnySyntaxKind = var1
   var tokenType: Token = var2
-  var children: ListBuffer[MySyntaxNode] = ListBuffer[MySyntaxNode]()
+  var children: ListBuffer[SyntaxNode] = ListBuffer[SyntaxNode]()
 
   override def kind(): AnySyntaxKind = tokenKind
 
@@ -18,16 +18,16 @@ class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends Synta
 
   override def slot(i: Int): SyntaxNode = children(i)
   
-  def apply(i: Int): MySyntaxNode = children(i)
+  def apply(i: Int): SyntaxNode = children(i)
   
-  def add(kind: AnySyntaxKind, token: Token = null): ListBuffer[MySyntaxNode] = 
+  def add(kind: AnySyntaxKind, token: Token = null): ListBuffer[SyntaxNode] =
     children.append(MySyntaxNode(kind, token))
   
-  def add(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = children.append(mySyntaxNode)
+  def add(mySyntaxNode: SyntaxNode): ListBuffer[SyntaxNode] = children.append(mySyntaxNode)
 
-  def addNull(num: Int) = for (x <- 1 to num) {children.append(null)}
+  def addFail(num: Int): Unit = for (x <- 1 to num) {children.append(null)}
   
-  def addLeft(mySyntaxNode: MySyntaxNode): Unit = children.insert(0, mySyntaxNode)
+  def addLeft(mySyntaxNode: SyntaxNode): Unit = children.insert(0, mySyntaxNode)
 
   override def toString: String = tokenKind.toString
 

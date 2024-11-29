@@ -8,6 +8,7 @@ import syspro.tm.lexer.Symbol.*
 import syspro.tm.lexer.{BooleanLiteralToken, IdentifierToken, IntegerLiteralToken, Keyword, KeywordToken, RuneLiteralToken, StringLiteralToken, Symbol, SymbolToken, Token}
 import syspro.tm.parser.SyntaxKind.*
 import syspro.tm.parser.{ParseResult, Parser}
+import scala.util.boundary
 
 import scala.Predef.{???, *}
 import scala.collection.mutable
@@ -97,17 +98,19 @@ case class MyParser() extends Parser {
         state.idx += 1
       }
     } else {
-      node.addNull(3)
+      node.addFail(3)
     }
     if (isTypeBound(tokens(state.idx))) {
       node.add(matchTypeBound(tokens, state))
       state.drop()
     } else {
-      node.addNull(1)
+      node.addFail(1)
     }
     if (state.idx < tokens.length && isIndent(tokens(state.idx))) { // TODO: Do same thing with other conditions
       node.add(INDENT, tokens(state.idx))
+      state.indentLevel += 1
       state.idx += 1
+      val thisIndentLevel = state.indentLevel
       val list = MySyntaxNode(LIST)
       while (isDefinition(tokens(state.idx))) {
         list.add(matchDefinition(tokens))
@@ -116,11 +119,23 @@ case class MyParser() extends Parser {
       if (isDedent(tokens(state.idx))) {
         node.add(DEDENT, tokens(state.idx))
         state.idx += 1
+        state.indentLevel -= 1
       } else {
+        boundary:
+          while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
+            if (isIndent(tokens(state.idx))) {
+              state.indentLevel += 1
+            } else if (isDedent(tokens(state.idx))) {
+              state.indentLevel -= 1
+            }
+            state.idx += 1
+        }
+        node.add(DEDENT, tokens(state.idx))
+        state.indentLevel -= 1
         // Нет Dedenta но есть Indent очеьн плохо
       }
     } else {
-      node.addNull(3)
+      node.addFail(3)
       // Empty member block
     }
     node
@@ -131,7 +146,7 @@ case class MyParser() extends Parser {
   def matchFuncDef(tokens: Vector[Token]): MySyntaxNode = {
     val node = MySyntaxNode(FUNCTION_DEFINITION)
     val list = MySyntaxNode(LIST)
-    while (isFunctionDefStart(tokens(state.idx))) {
+    while (isFunctionDefStart(tokens(state.idx)) && !isKeyword(tokens(state.idx), DEF)) {
       list.add(matchFuncDefStart(tokens))
     }
     node.add(list)
@@ -171,7 +186,7 @@ case class MyParser() extends Parser {
       }
       node.add(sepList)
     } else {
-      node.addNull(1)
+      node.add(MySyntaxNode(SEPARATED_LIST))
     }
 
     if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
@@ -190,12 +205,14 @@ case class MyParser() extends Parser {
         // Не хватает типа. Короче что-то плохое
       }
     } else {
-      node.addNull(2)
+      node.addFail(2)
     }
 
     if (isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
       state.idx += 1
+      state.indentLevel += 1
+      val thisIndentLevel = state.indentLevel
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
         list.add(matchStatement(tokens))
@@ -204,9 +221,22 @@ case class MyParser() extends Parser {
       if (isDedent(tokens(state.idx))) {
         node.add(DEDENT, tokens(state.idx))
         state.idx += 1
+        state.indentLevel -= 1
       } else {
+        while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
+          if (isIndent(tokens(state.idx))) {
+            state.indentLevel += 1
+          } else if (isDedent(tokens(state.idx))) {
+            state.indentLevel -= 1
+          }
+          state.idx += 1
+        }
+        node.add(DEDENT, tokens(state.idx))
+        state.indentLevel -= 1
         // Нет Dedenta но есть Indent очень плохо
       }
+    } else {
+      node.addFail(3)
     }
     node
   }
@@ -244,6 +274,8 @@ case class MyParser() extends Parser {
       else {
         ??? // TODO: it is a bad situation
       }
+    } else {
+      node.addFail(2)
     }
     if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.EQUALS)) {
       node.add(Symbol.EQUALS, tokens(state.idx))
@@ -252,9 +284,10 @@ case class MyParser() extends Parser {
       if (isExpression(tokens(state.idx))) {
         node.add(matchExpression(tokens))
       } else {
-        ??? // TODO: Bad Situation
+        // TODO: Bad Situation
       }
     }
+
     node
   }
 
@@ -276,6 +309,7 @@ case class MyParser() extends Parser {
     if (state.idx < tokens.length && isTypeBound(tokens(state.idx))) {
       node.add(matchTypeBound(tokens, state))
     } else {
+      node.addFail(1)
       // всё ок
     }
     node
@@ -372,21 +406,32 @@ case class MyParser() extends Parser {
     }
     if (isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
+      state.indentLevel += 1
+      val thisIndentLevel = state.indentLevel
       val list = MySyntaxNode(LIST)
       state.idx += 1
       while (isStatement(tokens(state.idx))) {
         list.add(matchStatement(tokens))
       }
-      if (list.slotCount() == 0) node.add(null)
       node.add(list)
       if (isDedent(tokens(state.idx))) {
         node.add(DEDENT, tokens(state.idx))
         state.idx += 1
+        state.indentLevel -= 1
       } else {
-        ??? // There is no Dedent but is Indent
+        while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
+          if (isIndent(tokens(state.idx))) {
+            state.indentLevel += 1
+          } else if (isDedent(tokens(state.idx))) {
+            state.indentLevel -= 1
+          }
+          state.idx += 1
+        }
+        node.add(DEDENT, tokens(state.idx))
+        state.indentLevel -= 1
       }
     } else {
-      node.addNull(3)
+      node.addFail(3)
       // No statement_block
     }
     if (isKeyword(tokens(state.idx), ELSE)) {
@@ -410,6 +455,8 @@ case class MyParser() extends Parser {
       } else {
         // NO Dedent (((
       }
+    } else {
+      node.addFail(4)
     }
     node
   }
@@ -439,7 +486,7 @@ case class MyParser() extends Parser {
         ??? // There is no Dedent but is Indent
       }
     }
-    else node.addNull(3)
+    else node.addFail(3)
     node
   }
 
@@ -477,7 +524,7 @@ case class MyParser() extends Parser {
         ??? // There is no Dedent but is Indent
       }
     } else {
-      node.addNull(3)
+      node.addFail(3)
     }
     node
   }
@@ -594,12 +641,12 @@ case class MyParser() extends Parser {
         case keyword: KeywordToken => keyword.keyword match
           case THIS => node = MySyntaxNode(THIS_EXPRESSION); node.add(THIS, keyword); state.idx += 1
           case SUPER => node = MySyntaxNode(SUPER_EXPRESSION); node.add(SUPER, keyword); state.idx += 1
+          case NULL => MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, keyword); state.idx += 1
         case rune: RuneLiteralToken => node = MySyntaxNode(RUNE_LITERAL_EXPRESSION); node.add(RUNE, rune); state.idx += 1
         case int: IntegerLiteralToken => node = MySyntaxNode(INTEGER_LITERAL_EXPRESSION); node.add(INTEGER, int); state.idx += 1
         case str: StringLiteralToken => node = MySyntaxNode(STRING_LITERAL_EXPRESSION); node.add(STRING, str); state.idx += 1
         case True: BooleanLiteralToken if True.value => node = MySyntaxNode(TRUE_LITERAL_EXPRESSION); node.add(BOOLEAN, True); state.idx += 1
         case False: BooleanLiteralToken if !False.value => node = MySyntaxNode(FALSE_LITERAL_EXPRESSION); node.add(BOOLEAN, False); state.idx += 1
-        case keyword: KeywordToken if keyword.keyword == NULL => MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, keyword); state.idx += 1
         case symbolToken: SymbolToken => symbolToken.symbol match {
           case DOT =>
             val dotNode = MySyntaxNode(MEMBER_ACCESS_EXPRESSION)
@@ -729,12 +776,18 @@ case class MyParser() extends Parser {
 
   override def parse(s: String): ParseResult = {
     state.idx = 0
+    state.indentLevel = 0
     val lexer = Tokenizer()
     val tokens: Vector[Token] = lexer.lex(s).asScala.toVector
     val parseResult = MyParseResult(SOURCE_TEXT)
     val list = MySyntaxNode(LIST)
-    while (state.idx < tokens.length) {
-      list.add(matchTypeDef(tokens))
+    boundary:
+      while (state.idx < tokens.length) {
+        if (isTypeDefStart(tokens(state.idx))) {
+          list.add(matchTypeDef(tokens))
+        } else {
+          boundary.break()
+        }
     }
     parseResult.addToRoot(list)
     parseResult

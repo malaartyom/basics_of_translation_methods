@@ -108,8 +108,9 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val r = p.matchTypeParamDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
-    assertEquals(r.slotCount(), 1)
+    assertEquals(r.slotCount(), 2)
     assertEquals(r.slot(0).kind(), SyntaxKind.IDENTIFIER)
+    assertEquals(r.slot(1).kind(), null)
 
 
   }
@@ -219,10 +220,10 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     assertEquals(r.slot(1).kind(), Keyword.DEF)
     assertEquals(r.slot(2).kind(), SyntaxKind.IDENTIFIER)
     assertEquals(r.slot(3).kind(), Symbol.OPEN_PAREN)
-    assertEquals(r.slot(4), null)
+    assertEquals(r.slot(4).kind(), SyntaxKind.SEPARATED_LIST)
     assertEquals(r.slot(5).kind(), Symbol.CLOSE_PAREN)
-    assertEquals(r.slot(6), null)
-    assertEquals(r.slot(7), null)
+    assertEquals(r.slot(6).kind(), null)
+    assertEquals(r.slot(7).kind(), null)
     assertEquals(r.slot(8).kind(), SyntaxKind.INDENT)
     assertEquals(r.slot(9).kind(), SyntaxKind.LIST)
     assertEquals(r.slot(10).kind(), SyntaxKind.DEDENT)
@@ -265,9 +266,11 @@ class VariableDefinitionTests extends munit.FunSuite {
     val r = p.matchVariableDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
-    assertEquals(r.slotCount(), 2)
+    assertEquals(r.slotCount(), 4)
     assertEquals(r.slot(0).kind(), Keyword.VAR)
     assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER)
+    assertEquals(r.slot(2).kind(), null)
+    assertEquals(r.slot(3).kind(), null)
 
   }
 
@@ -280,9 +283,11 @@ class VariableDefinitionTests extends munit.FunSuite {
     val r = p.matchVariableDef(tokens.asScala.toVector)
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
-    assertEquals(r.slotCount(), 2)
+    assertEquals(r.slotCount(), 4)
     assertEquals(r.slot(0).kind(), Keyword.VAL)
     assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER)
+    assertEquals(r.slot(2).kind(), null)
+    assertEquals(r.slot(3).kind(), null)
 
   }
 
@@ -822,9 +827,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.IF)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
-    assertEquals(result.slot(2), null)
-    assertEquals(result.slot(3), null)
-    assertEquals(result.slot(4), null)
+    assertEquals(result.slot(2).kind(), null)
+    assertEquals(result.slot(3).kind(), null)
+    assertEquals(result.slot(4).kind(), null)
     assertEquals(result.slot(5).kind(), Keyword.ELSE)
     assertEquals(result.slot(6).kind(), SyntaxKind.INDENT)
     assertEquals(result.slot(7).kind, SyntaxKind.LIST)
@@ -864,9 +869,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.WHILE)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
-    assertEquals(result.slot(2), null)
-    assertEquals(result.slot(3), null)
-    assertEquals(result.slot(4), null)
+    assertEquals(result.slot(2).kind(), null)
+    assertEquals(result.slot(3).kind(), null)
+    assertEquals(result.slot(4).kind(), null)
   }
 
   test("Statement normal while") {
@@ -896,9 +901,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
     assertEquals(result.slot(2).kind, Keyword.IN)
     assertEquals(result.slot(3).kind(), SyntaxKind.INVOCATION_EXPRESSION)
-    assertEquals(result.slot(4), null)
-    assertEquals(result.slot(5), null)
-    assertEquals(result.slot(6), null)
+    assertEquals(result.slot(4).kind(), null)
+    assertEquals(result.slot(5).kind(), null)
+    assertEquals(result.slot(6).kind(), null)
   }
 
   test("Statement complicated for") {
@@ -991,6 +996,90 @@ class ExpressionTest extends munit.FunSuite {
 }
 
 class BaseTests extends munit.FunSuite {
+
+  test("Indent2") {
+    val t = Tokenizer()
+    val s =
+      """class Indent2
+        |    # Comment established 4 spaces as single identation level
+        |  def memberIsAt2(): Boolean
+        |    return true""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+
+  }
+  test("Indent 3") {
+    val t = Tokenizer()
+    val s = """class Indent3
+              |  def memberIsAt2(): Boolean
+              |  # Comment is ignored, identation level is increased after this line
+              |    return true""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+  }
+  test("Indent 4") {
+    val t = Tokenizer()
+    val s =
+      """class Indent4
+        |  def memberIsAt2(): Boolean
+        |      # Comment introduced extra identation level in the method body
+        |    return true""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+
+  }
+  test("Indent 7") {
+    val t = Tokenizer()
+    val s = """class Indent7
+              |  def memberIsAt2(): Boolean
+              |    return true
+              |    if true
+              |        # All identation levels are closed per EOF rule
+              |        """.stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+
+  }
+  test("Bad2") {
+    val t = Tokenizer()
+    val s =
+      """class Bad2
+        |    val x = 
+        |    val y = 42""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+
+  }
   test("Base test 2 ") {
     val t = Tokenizer()
     val s = "class \uD835\uDEA8\u00AD\uD800\uDF41\n    def nameImplicit(): String\n        return \"\uD835\uDEA8\u00AD\uD800\uDF41\"\n    def nameExͯplicit(): String\n        return \"\\U+1D6A8\\U+00AD\\U+10341\"\n    def letterImplicit(): Rune\n        return '\uD835\uDEA8'\n    def letterExͯplicit(): Rune\n        return '\\U+1D6A8'\n    def number\uFEFFValue(): Int64\n        return 90\n    def numberImplicit(): Rune\n        return '\uD800\uDF41'\n    def numberExͯplicit(): Rune\n        return '\\U+10341'"
@@ -1003,7 +1092,55 @@ class BaseTests extends munit.FunSuite {
 
   }
 
-//  test("Base test 3") {
+
+  test("Base test 3") {
+
+    val t = Tokenizer()
+    val s =
+      """class Indent9	val x = 42""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
+
+  }
+
+  test("Base test 4") {
+
+    val t = Tokenizer()
+    val s =
+      """class 𝚨­𐍁
+        |    def nameImplicit(): String
+        |        return "𝚨­𐍁"
+        |    def nameExͯplicit(): String
+        |        return "\U+1D6A8\U+00AD\U+10341"
+        |    def letterImplicit(): Rune
+        |        return '𝚨'
+        |    def letterExͯplicit(): Rune
+        |        return '\U+1D6A8'
+        |    def number﻿Value(): Int64
+        |        return 90
+        |    def numberImplicit(): Rune
+        |        return '𐍁'
+        |    def numberExͯplicit(): Rune
+        |        return '\U+10341'""".stripMargin
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+
+    assertEquals(result.root().slot(0).slot(0).slotCount(), 9)
+    assertEquals(result.root().slot(0).slot(0).slot(0).kind(), Keyword.CLASS)
+
+  }
+    //  test("Base test 3") {
 //    val t = Tokenizer()
 //    val s = "class Indent1\n   def notMultipleOf2(): Boolean\n      return true"
 //    val tokens = t.lex(s)

@@ -1,6 +1,6 @@
 package ParserImplementation
 import syspro.tm.lexer.Token
-import syspro.tm.parser.{AnySyntaxKind, Diagnostic, ParseResult, TextSpan}
+import syspro.tm.parser.{AnySyntaxKind, Diagnostic, ParseResult, SyntaxNode, TextSpan}
 
 import java.util
 import scala.collection.mutable.ListBuffer
@@ -20,7 +20,7 @@ class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends Pa
 
   override def diagnostics(): util.Collection[Diagnostic] = diagnostic.asJavaCollection
   
-  def addToRoot(mySyntaxNode: MySyntaxNode): ListBuffer[MySyntaxNode] = rootNode.add(mySyntaxNode)
+  def addToRoot(mySyntaxNode: SyntaxNode): ListBuffer[SyntaxNode] = rootNode.add(mySyntaxNode)
   
 
 
