@@ -18,8 +18,9 @@ case class MyParser() extends Parser {
 
   var state = State()
   var parseResult = MyParseResult(SOURCE_TEXT)
+  var tokens = Vector[Token]()
 
-  def matchTypeBound(tokens: Vector[Token], state: State): MySyntaxNode = {
+  def matchTypeBound(): MySyntaxNode = {
     val node = MySyntaxNode(TYPE_BOUND)
     node.add(Symbol.BOUND, tokens(state.idx)) // TODO: Check if not BOUND ??? Same in all other match* functions
     state.idx += 1
@@ -28,14 +29,14 @@ case class MyParser() extends Parser {
 
       val sepList = MySyntaxNode(SEPARATED_LIST)
 
-      sepList.add(matchNameExpression(tokens))
+      sepList.add(matchNameExpression())
 
       while (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.AMPERSAND)) {
         sepList.add(Symbol.AMPERSAND, tokens(state.idx))
         state.idx += 1
 
         if (isNameExpression(tokens(state.idx))) {
-          sepList.add(matchNameExpression(tokens))
+          sepList.add(matchNameExpression())
         }
       }
       if (sepList.slotCount() == 0) {
@@ -48,21 +49,21 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchDefinition(tokens: Vector[Token]): MySyntaxNode = {
+  def matchDefinition(): MySyntaxNode = {
     tokens(state.idx) match
-      case typeDef: IdentifierToken if isTypeDefStart(typeDef) => matchTypeDef(tokens)
-      case funcDef: KeywordToken if isFunctionDefStart(funcDef) => matchFuncDef(tokens)
-      case varDef: KeywordToken if isVariableDefStart(varDef) => matchVariableDef(tokens)
-      case typeParameterDef: IdentifierToken if isIdentifier(typeParameterDef) => matchTypeParamDef(tokens)
+      case typeDef: IdentifierToken if isTypeDefStart(typeDef) => matchTypeDef()
+      case funcDef: KeywordToken if isFunctionDefStart(funcDef) => matchFuncDef()
+      case varDef: KeywordToken if isVariableDefStart(varDef) => matchVariableDef()
+      case typeParameterDef: IdentifierToken if isIdentifier(typeParameterDef) => matchTypeParamDef()
       case parameterDef: IdentifierToken if isIdentifier(parameterDef) && state.idx + 1 < tokens.length
-        && isSymbol(tokens(state.idx + 1), Symbol.COLON) => matchParamDef(tokens)
+        && isSymbol(tokens(state.idx + 1), Symbol.COLON) => matchParamDef()
   }
 
-  def matchTypeDef(tokens: Vector[Token]): MySyntaxNode = {
+  def matchTypeDef(): MySyntaxNode = {
     val node = MySyntaxNode(TYPE_DEFINITION)
 
     if (isTypeDefStart(tokens(state.idx))) {
-      val terminal = matchTypeDefStart(tokens)
+      val terminal = matchTypeDefStart()
       val token = tokens(state.idx)
       val newToken = KeywordToken(token.start, token.end, token.leadingTriviaLength, token.trailingTriviaLength, token.asInstanceOf[IdentifierToken].contextualKeyword)
       node.add(terminal, newToken) // TODO: Func in state
@@ -85,13 +86,13 @@ case class MyParser() extends Parser {
 
       if (isTypeParameterDef(tokens(state.idx))) {
         val sepList = MySyntaxNode(SEPARATED_LIST)
-        sepList.add(matchTypeParamDef(tokens))
+        sepList.add(matchTypeParamDef())
 
         while (isSymbol(tokens(state.idx), Symbol.COMMA)) {
           sepList.add(Symbol.COMMA, tokens(state.idx))
           state.idx += 1
           if (isTypeParameterDef(tokens(state.idx))) {
-            sepList.add(matchTypeParamDef(tokens))
+            sepList.add(matchTypeParamDef())
           } else {
             // TODO: что-то плохое надо пропустить запятую и дальше парсить
           }
@@ -112,8 +113,7 @@ case class MyParser() extends Parser {
       node.addFail(3)
     }
     if (isTypeBound(tokens(state.idx))) {
-      node.add(matchTypeBound(tokens, state))
-      state.drop()
+      node.add(matchTypeBound())
     } else {
       node.addFail(1)
     }
@@ -124,7 +124,7 @@ case class MyParser() extends Parser {
       val thisIndentLevel = state.indentLevel
       val list = MySyntaxNode(LIST)
       while (isDefinition(tokens(state.idx))) {
-        list.add(matchDefinition(tokens))
+        list.add(matchDefinition())
       }
       if (list.slotCount() == 0) {
         node.add(null)
@@ -157,13 +157,13 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchTypeDefStart(tokens: Vector[Token]): Keyword = tokens(state.idx).asInstanceOf[IdentifierToken].contextualKeyword
+  def matchTypeDefStart(): Keyword = tokens(state.idx).asInstanceOf[IdentifierToken].contextualKeyword
 
-  def matchFuncDef(tokens: Vector[Token]): MySyntaxNode = {
+  def matchFuncDef(): MySyntaxNode = {
     val node = MySyntaxNode(FUNCTION_DEFINITION)
     val list = MySyntaxNode(LIST)
     while (isFunctionDefStart(tokens(state.idx)) && !isKeyword(tokens(state.idx), DEF)) {
-      list.add(matchFuncDefStart(tokens))
+      list.add(matchFuncDefStart())
     }
     if (list.slotCount() == 0) {
       node.add(null)
@@ -194,12 +194,12 @@ case class MyParser() extends Parser {
 
     if (isIdentifier(tokens(state.idx))) {
       val sepList = MySyntaxNode(SEPARATED_LIST)
-      sepList.add(matchParamDef(tokens))
+      sepList.add(matchParamDef())
       while (isSymbol(tokens(state.idx), COMMA)) {
         sepList.add(COMMA, tokens(state.idx))
         state.idx += 1
         if (isIdentifier(tokens(state.idx))) {
-          sepList.add(matchParamDef(tokens))
+          sepList.add(matchParamDef())
         }
         else {
           // Есть запятая но нет дальше ничего
@@ -226,7 +226,7 @@ case class MyParser() extends Parser {
       node.add(COLON, tokens(state.idx))
       state.idx += 1
       if (isNameExpression(tokens(state.idx))) {
-        node.add(matchNameExpression(tokens))
+        node.add(matchNameExpression())
       } else {
         // Не хватает типа. Короче что-то плохое
       }
@@ -241,7 +241,7 @@ case class MyParser() extends Parser {
       val thisIndentLevel = state.indentLevel
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
-        list.add(matchStatement(tokens))
+        list.add(matchStatement())
       }
       if (list.slotCount() == 0) {
         node.add(null)
@@ -275,7 +275,7 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchFuncDefStart(tokens: Vector[Token]): MySyntaxNode = {
+  def matchFuncDefStart(): MySyntaxNode = {
     var node = MySyntaxNode(BAD)
     tokens(state.idx) match
       case keyword: KeywordToken =>
@@ -286,10 +286,10 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchVariableDef(tokens: Vector[Token]): MySyntaxNode = {
+  def matchVariableDef(): MySyntaxNode = {
     val node = MySyntaxNode(VARIABLE_DEFINITION)
     if (isVariableDefStart(tokens(state.idx))) {
-      node.add(matchVariableDefStart(tokens, state))
+      node.add(matchVariableDefStart())
     } else {
       ???
     }
@@ -303,7 +303,7 @@ case class MyParser() extends Parser {
       node.add(Symbol.COLON, tokens(state.idx))
       state.idx += 1
       if (isNameExpression(tokens(state.idx))) {
-        node.add(matchNameExpression(tokens))
+        node.add(matchNameExpression())
       }
       else {
         ??? // TODO: it is a bad situation
@@ -316,7 +316,7 @@ case class MyParser() extends Parser {
       state.idx += 1
 
       if (isExpression(tokens(state.idx))) {
-        node.add(matchExpression(tokens))
+        node.add(matchExpression())
       } else {
         while (!isDefinition(tokens(state.idx)) && !isStatement(tokens(state.idx))) {
           node.addFail(1)
@@ -331,7 +331,7 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchVariableDefStart(tokens: Vector[Token], state: State): MySyntaxNode = {
+  def matchVariableDefStart(): MySyntaxNode = {
     var node = MySyntaxNode(BAD)
     tokens(state.idx) match
       case keyword: KeywordToken => keyword.keyword match
@@ -342,12 +342,12 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchTypeParamDef(tokens: Vector[Token]): MySyntaxNode = {
+  def matchTypeParamDef(): MySyntaxNode = {
     val node = MySyntaxNode(TYPE_PARAMETER_DEFINITION)
     node.add(IDENTIFIER, tokens(state.idx)) // TODO: Check
     state.idx += 1
     if (state.idx < tokens.length && isTypeBound(tokens(state.idx))) {
-      node.add(matchTypeBound(tokens, state))
+      node.add(matchTypeBound())
     } else {
       node.addFail(1)
       // всё ок
@@ -356,7 +356,7 @@ case class MyParser() extends Parser {
   }
 
 
-  def matchParamDef(tokens: Vector[Token]): MySyntaxNode = {
+  def matchParamDef(): MySyntaxNode = {
     val node = MySyntaxNode(PARAMETER_DEFINITION)
     if (isIdentifier(tokens(state.idx))) {
       node.add(IDENTIFIER, tokens(state.idx))
@@ -373,19 +373,19 @@ case class MyParser() extends Parser {
       ???
     }
     if (isNameExpression(tokens(state.idx))) {
-      node.add(matchNameExpression(tokens))
+      node.add(matchNameExpression())
     }
     node
   }
 
-  def matchStatement(tokens: Vector[Token]): MySyntaxNode = {
+  def matchStatement(): MySyntaxNode = {
     tokens(state.idx) match
       case variable if isVariableDefStart(variable) =>
         val node = MySyntaxNode(VARIABLE_DEFINITION_STATEMENT)
-        node.add(matchVariableDef(tokens))
+        node.add(matchVariableDef())
         node
       case primary if isPrimary(primary) =>
-        val res = matchPrimary(tokens)
+        val res = matchPrimary()
         var node = MySyntaxNode()
         if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.EQUALS)) {
           node = MySyntaxNode(ASSIGNMENT_STATEMENT)
@@ -393,7 +393,7 @@ case class MyParser() extends Parser {
           node.add(EQUALS, tokens(state.idx))
           state.idx += 1
           if (isExpression(tokens(state.idx))) {
-            node.add(matchExpression(tokens))
+            node.add(matchExpression())
           } else {
             // плохо
           }
@@ -404,7 +404,7 @@ case class MyParser() extends Parser {
         node
       case expression if isExpression(expression) =>
         val node = MySyntaxNode(EXPRESSION_STATEMENT)
-        node.add(matchExpression(tokens))
+        node.add(matchExpression())
         node
       case keyword: KeywordToken => keyword.keyword match
         case RETURN =>
@@ -412,7 +412,7 @@ case class MyParser() extends Parser {
           node.add(RETURN, tokens(state.idx))
           state.idx += 1
           if (state.idx < tokens.length && isExpression(tokens(state.idx))) {
-            node.add(matchExpression(tokens))
+            node.add(matchExpression())
           }
           node
         case BREAK =>
@@ -425,20 +425,20 @@ case class MyParser() extends Parser {
           node.add(CONTINUE, tokens(state.idx))
           state.idx += 1
           node
-        case IF => matchIF(tokens)
-        case WHILE => matchWhile(tokens)
-        case FOR => matchFor(tokens)
+        case IF => matchIF()
+        case WHILE => matchWhile()
+        case FOR => matchFor()
         case _ => MySyntaxNode(BAD, tokens(state.idx))
       case _ => MySyntaxNode(BAD, tokens(state.idx))
   }
 
 
-  private def matchIF(tokens: Vector[Token]) = {
-    val node = MySyntaxNode(IF_STATEMENT)
+  private def matchIF() = {
+    var node = MySyntaxNode(IF_STATEMENT)
     node.add(IF, tokens(state.idx))
     state.idx += 1
     if (isExpression(tokens(state.idx))) {
-      node.add(matchExpression(tokens))
+      node.add(matchExpression())
     }
     else {
       node.add(null)
@@ -451,10 +451,10 @@ case class MyParser() extends Parser {
       val list = MySyntaxNode(LIST)
       state.idx += 1
       while (isStatement(tokens(state.idx))) {
-        list.add(matchStatement(tokens))
+        list.add(matchStatement())
       }
       if (list.slotCount() == 0) {
-
+        val newNode = MySyntaxNode(IF_STATEMENT)
         node.add(null)
       }
       else {
@@ -495,7 +495,7 @@ case class MyParser() extends Parser {
 
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
-        list.add(matchStatement(tokens))
+        list.add(matchStatement())
       }
       if (list.slotCount() == 0) {
         node.add(null)
@@ -515,12 +515,12 @@ case class MyParser() extends Parser {
     node
   }
 
-  private def matchWhile(tokens: Vector[Token]) = {
+  private def matchWhile() = {
     val node = MySyntaxNode(WHILE_STATEMENT)
     node.add(WHILE, tokens(state.idx))
     state.idx += 1
     if (isExpression(tokens(state.idx))) {
-      node.add(matchExpression(tokens))
+      node.add(matchExpression())
     }
     else {
       // No expr for while loop
@@ -530,7 +530,7 @@ case class MyParser() extends Parser {
       state.idx += 1
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
-        list.add(matchStatement(tokens))
+        list.add(matchStatement())
       }
       if (list.slotCount() == 0) {
         node.add(null)
@@ -549,12 +549,12 @@ case class MyParser() extends Parser {
     node
   }
 
-  private def matchFor(tokens: Vector[Token]) = {
+  private def matchFor() = {
     val node = MySyntaxNode(FOR_STATEMENT)
     node.add(FOR, tokens(state.idx))
     state.idx += 1
     if (isPrimary(tokens(state.idx))) {
-      node.add(matchPrimary(tokens))
+      node.add(matchPrimary())
     } else {
       // BAD Situation
     }
@@ -566,14 +566,14 @@ case class MyParser() extends Parser {
       // Bad
     }
     if (isExpression(tokens(state.idx))) {
-      node.add(matchExpression(tokens))
+      node.add(matchExpression())
     }
     if (state.idx < tokens.length && isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
       state.idx += 1
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
-        list.add(matchStatement(tokens))
+        list.add(matchStatement())
       }
       if (list.slotCount() == 0) {
         node.add(null)
@@ -593,18 +593,18 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchExpression(tokens: Vector[Token]): MySyntaxNode = {
+  def matchExpression(): MySyntaxNode = {
     val opStack = mutable.Stack[SymbolToken | KeywordToken]()
     val nodeStack = mutable.Stack[MySyntaxNode]()
 
     if (isUnary(tokens(state.idx))) {
-      val operation = matchUnary(tokens)
-      val node = matchPrimary(tokens)
+      val operation = matchUnary()
+      val node = matchPrimary()
       operation.add(node)
       nodeStack.push(operation)
       // -this.x + 42 * 13
       // a is b x
-    } else if (isPrimary(tokens(state.idx))) nodeStack.push(matchPrimary(tokens))
+    } else if (isPrimary(tokens(state.idx))) nodeStack.push(matchPrimary())
     while (state.idx < tokens.length && isExpressionContinue(tokens(state.idx))) {
       // TODO: Remove pattern-matching
       val currentPriority = {
@@ -633,7 +633,7 @@ case class MyParser() extends Parser {
           case keyword: KeywordToken => opStack.push(keyword)
       }
       state.idx += 1
-      nodeStack.push(matchPrimary(tokens))
+      nodeStack.push(matchPrimary())
     }
 
     while (opStack.nonEmpty) {
@@ -645,7 +645,7 @@ case class MyParser() extends Parser {
     nodeStack.pop()
   }
 
-  def matchUnary(tokens: Vector[Token]): MySyntaxNode = {
+  def matchUnary(): MySyntaxNode = {
     var node = MySyntaxNode()
     tokens(state.idx) match
       case symbol: SymbolToken if isUnary(tokens(state.idx)) =>
@@ -690,19 +690,19 @@ case class MyParser() extends Parser {
     node
   }
 
-  def matchPrimary(tokens: Vector[Token]): MySyntaxNode = {
-    matchDefaultPrimary(tokens)
+  def matchPrimary(): MySyntaxNode = {
+    matchDefaultPrimary()
   }
 
-  private def matchDefaultPrimary(tokens: Vector[Token]): MySyntaxNode = {
+  private def matchDefaultPrimary(): MySyntaxNode = {
     var node: MySyntaxNode = MySyntaxNode()
     var first = true
-    while (state.idx < tokens.length && isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx))))
+    while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
         case bad: BadToken => node =MySyntaxNode(BAD, bad)
           parseResult.addInvalidRange(tokens(state.idx).start, tokens(state.idx).end + 1)
           state.idx += 1
-        case nameExpr if isNameExpression(nameExpr) => node = matchNameExpression(tokens)
+        case nameExpr if isNameExpression(nameExpr) => node = matchNameExpression()
         case identifier: IdentifierToken if identifier.contextualKeyword != null && identifier.contextualKeyword == NULL =>
           node = MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, identifier); state.idx += 1
         case keyword: KeywordToken => keyword.keyword match
@@ -733,7 +733,7 @@ case class MyParser() extends Parser {
             bracketNode.add(OPEN_BRACKET, tokens(state.idx))
             state.idx += 1
             if (isExpression(tokens(state.idx))) {
-              bracketNode.add(matchExpression(tokens))
+              bracketNode.add(matchExpression())
             }
             if (isSymbol(tokens(state.idx), CLOSE_BRACKET)) {
               bracketNode.add(CLOSE_BRACKET, tokens(state.idx))
@@ -745,7 +745,7 @@ case class MyParser() extends Parser {
             val parenNode = MySyntaxNode(PARENTHESIZED_EXPRESSION)
             parenNode.add(OPEN_PAREN, symbolToken)
             state.idx += 1
-            parenNode.add(matchExpression(tokens))
+            parenNode.add(matchExpression())
             if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
               parenNode.add(CLOSE_PAREN, tokens(state.idx))
               state.idx += 1
@@ -758,12 +758,12 @@ case class MyParser() extends Parser {
             state.idx += 1
             val sepList = MySyntaxNode(SEPARATED_LIST)
             if (isExpression(tokens(state.idx))) {
-              sepList.add(matchExpression(tokens))
+              sepList.add(matchExpression())
               while (isSymbol(tokens(state.idx), COMMA)) {
                 sepList.add(COMMA, tokens(state.idx))
                 state.idx += 1
                 if (isExpression(tokens(state.idx))) {
-                  sepList.add(matchExpression(tokens))
+                  sepList.add(matchExpression())
                 }
               }
             } else {
@@ -788,16 +788,16 @@ case class MyParser() extends Parser {
   }
 
 
-  def matchNameExpression(tokens: Vector[Token]): MySyntaxNode = {
+  def matchNameExpression(): MySyntaxNode = {
     tokens(state.idx) match
       case i: IdentifierToken =>
-        if (state.idx + 1 < tokens.length && isSymbol(tokens(state.idx + 1), Symbol.LESS_THAN)) matchGenericNameExpression(tokens)
-        else matchIdentifierNameExpression(tokens)
-      case q: SymbolToken if isSymbol(q, Symbol.QUESTION) => matchOptionNameExpression(tokens)
+        if (state.idx + 1 < tokens.length && isSymbol(tokens(state.idx + 1), Symbol.LESS_THAN)) matchGenericNameExpression()
+        else matchIdentifierNameExpression()
+      case q: SymbolToken if isSymbol(q, Symbol.QUESTION) => matchOptionNameExpression()
 
   }
 
-  def matchIdentifierNameExpression(tokens: Vector[Token]): MySyntaxNode = {
+  def matchIdentifierNameExpression(): MySyntaxNode = {
     val node = MySyntaxNode(IDENTIFIER_NAME_EXPRESSION)
     node.add(IDENTIFIER, tokens(state.idx))
     state.idx += 1
@@ -805,15 +805,15 @@ case class MyParser() extends Parser {
   }
 
 
-  def matchOptionNameExpression(tokens: Vector[Token]): MySyntaxNode = {
+  def matchOptionNameExpression(): MySyntaxNode = {
     val node = MySyntaxNode(OPTION_NAME_EXPRESSION)
     node.add(Symbol.QUESTION, tokens(state.idx))
     state.idx += 1
-    node.add(matchNameExpression(tokens))
+    node.add(matchNameExpression())
     node
   }
 
-  def matchGenericNameExpression(tokens: Vector[Token]): MySyntaxNode = {
+  def matchGenericNameExpression(): MySyntaxNode = {
     var node = MySyntaxNode(GENERIC_NAME_EXPRESSION)
     node.add(IDENTIFIER, tokens(state.idx))
     state.idx += 1
@@ -822,7 +822,7 @@ case class MyParser() extends Parser {
       state.idx += 1
       val sepList = MySyntaxNode(SEPARATED_LIST)
       if (isNameExpression(tokens(state.idx))) {
-        sepList.add(matchNameExpression(tokens))
+        sepList.add(matchNameExpression())
       } else {
         ???
       }
@@ -831,7 +831,7 @@ case class MyParser() extends Parser {
         sepList.add(Symbol.COMMA, tokens(state.idx))
         state.idx += 1
         if (isNameExpression(tokens(state.idx))) {
-          sepList.add(matchNameExpression(tokens))
+          sepList.add(matchNameExpression())
         } else {
           ???
         }
@@ -845,9 +845,14 @@ case class MyParser() extends Parser {
       if (isSymbol(tokens(state.idx), Symbol.GREATER_THAN)) {
         node.add(Symbol.GREATER_THAN, tokens(state.idx))
         state.idx += 1
-      } else {
+      } else if (isSymbol(tokens(state.idx), Symbol.GREATER_THAN_GREATER_THAN)) {
+        tokens = state.doubleToken(tokens)
+        node.add(Symbol.GREATER_THAN, tokens(state.idx))
+        state.idx += 1
+      }
+      else {
         state.idx -= 3
-        node = matchIdentifierNameExpression(tokens)
+        node = matchIdentifierNameExpression()
       }
     }
     node
@@ -858,13 +863,13 @@ case class MyParser() extends Parser {
     state.idx = 0
     state.indentLevel = 0
     val lexer = Tokenizer()
-    val tokens: Vector[Token] = lexer.lex(s).asScala.toVector
+    tokens = lexer.lex(s).asScala.toVector
     parseResult = MyParseResult(SOURCE_TEXT)
     val list = MySyntaxNode(LIST)
     boundary:
       while (state.idx < tokens.length) {
         if (isTypeDefStart(tokens(state.idx))) {
-          list.add(matchTypeDef(tokens))
+          list.add(matchTypeDef())
         } else {
           while (state.idx < tokens.length && !isTypeDefStart(tokens(state.idx))) {
             state.idx += 1
@@ -874,6 +879,10 @@ case class MyParser() extends Parser {
     if (list.slotCount() == 0) {parseResult.addToRoot(null)}
     else {parseResult.addToRoot(list)}
     parseResult
+  }
+
+  def setTokens(newTokens: Vector[Token]) = {
+    tokens = newTokens
   }
 }
 

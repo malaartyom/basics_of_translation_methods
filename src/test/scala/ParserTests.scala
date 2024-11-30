@@ -10,7 +10,8 @@ class ParserTests extends munit.FunSuite {
   test("General Parser Tests") {
     val t = Tokenizer()
     val s = "class Identifier0<T <: U & V, G <: X & Y>  <: Object0"
-    val myParser = ParserImplementation.MyParser()
+    val tokens = t.lex(s)
+    val myParser =  ParserImplementation.MyParser();myParser.setTokens(tokens.asScala.toVector)
     val r = myParser.parse(s)
     val firstTypeDef = r.root().slot(0).slot(0)
 
@@ -59,10 +60,10 @@ class ParserTests extends munit.FunSuite {
 
     val t = Tokenizer()
     val s = "name0< ?name1, name2>"
-    val myParser = ParserImplementation.MyParser()
-    val r = t.lex(s)
+    val tokens = t.lex(s)
+    val myParser =  ParserImplementation.MyParser();myParser.setTokens(tokens.asScala.toVector)
     println()
-    val nameExpr = myParser.matchNameExpression(r.asScala.toVector)
+    val nameExpr = myParser.matchNameExpression()
 
     assertEquals(nameExpr.kind(), SyntaxKind.GENERIC_NAME_EXPRESSION)
 
@@ -86,8 +87,8 @@ class ParserTests extends munit.FunSuite {
     val tokens = t.lex(s)
 
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchFuncDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchFuncDef( )
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
     // TODO: Tests for defenitions
@@ -104,8 +105,8 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "func"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchTypeParamDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchTypeParamDef( )
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
     assertEquals(r.slotCount(), 2)
@@ -120,8 +121,8 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "T <: U & V & G"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchTypeParamDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchTypeParamDef( )
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
     assertEquals(r.slotCount(), 2)
@@ -149,8 +150,8 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     val s = "T <: U<X, Y> & ?V & G"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchTypeParamDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchTypeParamDef( )
 
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
     assertEquals(r.slotCount(), 2)
@@ -183,8 +184,8 @@ class ParamDefinitionTests extends munit.FunSuite {
     val tokens = t.lex(s)
 
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchParamDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchParamDef( )
 
     assertEquals(r.kind(), SyntaxKind.PARAMETER_DEFINITION)
     assertEquals(r.slotCount(), 3)
@@ -202,8 +203,8 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     val s = "def f()\n  break"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchFuncDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchFuncDef( )
 
   }
   test("Simple Definition") {
@@ -211,8 +212,8 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     val s = "override abstract virtual native def f()\n  break"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchFuncDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchFuncDef( )
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
     assertEquals(r.slotCount(), 11)
@@ -237,8 +238,8 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     val s = "override abstract virtual native def f(x: name0, y: ?name1, z: name3<T>): name5<V> \n  break\n  continue\n  "
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchFuncDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchFuncDef( )
 
     assertEquals(r.kind(), SyntaxKind.FUNCTION_DEFINITION)
     assertEquals(r.slotCount(), 11)
@@ -262,8 +263,8 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "var x"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchVariableDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchVariableDef( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
     assertEquals(r.slotCount(), 4)
@@ -279,8 +280,8 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "val x"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchVariableDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchVariableDef( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
     assertEquals(r.slotCount(), 4)
@@ -296,8 +297,8 @@ class VariableDefinitionTests extends munit.FunSuite {
     val s = "val x: name<T> =  name0"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchVariableDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchVariableDef( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
     assertEquals(r.slotCount(), 6)
@@ -319,8 +320,8 @@ class StatementTests extends munit.FunSuite {
     val s = "break"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.BREAK_STATEMENT)
@@ -334,8 +335,8 @@ class StatementTests extends munit.FunSuite {
     val s = "continue"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.CONTINUE_STATEMENT)
@@ -349,8 +350,8 @@ class StatementTests extends munit.FunSuite {
     val s = "return"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.RETURN_STATEMENT)
@@ -362,8 +363,8 @@ class StatementTests extends munit.FunSuite {
     val s = "return x"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 2)
     assertEquals(r.kind(), SyntaxKind.RETURN_STATEMENT)
@@ -376,8 +377,8 @@ class StatementTests extends munit.FunSuite {
     val s = "identifier"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 1)
     assertEquals(r.kind(), SyntaxKind.EXPRESSION_STATEMENT)
@@ -390,8 +391,8 @@ class StatementTests extends munit.FunSuite {
     val s = "name0 = name1<T>"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
     assertEquals(r.kind(), SyntaxKind.ASSIGNMENT_STATEMENT)
     assertEquals(r.slotCount(), 3)
     assertEquals(r.slot(0).kind(), SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -405,8 +406,8 @@ class StatementTests extends munit.FunSuite {
     val s = "var x = name1"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION_STATEMENT)
     assertEquals(r.slotCount(), 1)
@@ -420,8 +421,8 @@ class StatementTests extends munit.FunSuite {
     val s = "if x\n  break\n  continue\n  return\nelse\n  break\n  continue\n  return"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.kind(), SyntaxKind.IF_STATEMENT)
     assertEquals(r.slotCount(), 9)
@@ -441,8 +442,8 @@ class StatementTests extends munit.FunSuite {
     val s = "while x\n  break\n  continue\n  return\n"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 5)
     assertEquals(r.slot(0).kind(), Keyword.WHILE)
@@ -459,8 +460,8 @@ class StatementTests extends munit.FunSuite {
     val s = "for x in a\n  break\n  continue\n  return\n"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchStatement( )
 
     assertEquals(r.slotCount(), 7)
     assertEquals(r.slot(0).kind(), Keyword.FOR)
@@ -482,8 +483,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.THIS_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -497,8 +498,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "super"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.SUPER_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -512,8 +513,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "null"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.NULL_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -526,8 +527,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "true"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.TRUE_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -540,8 +541,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "false"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.FALSE_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -553,8 +554,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "'a'"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.RUNE_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -567,8 +568,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = """"xyz""""
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.STRING_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -580,8 +581,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "42"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
     assertEquals(r.slotCount(), 1)
@@ -593,8 +594,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "(name)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.PARENTHESIZED_EXPRESSION)
     assertEquals(r.slotCount(), 3)
@@ -609,8 +610,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this(name0, name1)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(r.slotCount(), 4)
@@ -634,8 +635,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this[12]"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.INDEX_EXPRESSION)
     assertEquals(r.slotCount(), 4)
@@ -652,8 +653,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this.a"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(r.slotCount(), 3)
@@ -667,8 +668,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this.a.b"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind(), SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(r.slotCount(), 3)
@@ -680,8 +681,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this[32].A"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val r = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val r = p.matchPrimary( )
 
     assertEquals(r.kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(r.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -698,8 +699,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this[32].A(23)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(result.slot(0).slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -711,8 +712,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "this[32].A(23, b)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(result.slot(0).slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -726,8 +727,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = " a.b[20](30)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
 
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -740,8 +741,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "a.b[20](30) 32"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
     assertEquals(result.slot(0).slot(0).kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
@@ -753,8 +754,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "(asd)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
     assertEquals(result.kind, SyntaxKind.PARENTHESIZED_EXPRESSION)
     assertEquals(result.slot(0).kind, Symbol.OPEN_PAREN)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -766,8 +767,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "(asd).b"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
     assertEquals(result.kind, SyntaxKind.MEMBER_ACCESS_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.PARENTHESIZED_EXPRESSION)
   }
@@ -777,8 +778,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "?a.b[20](30)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
 
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -791,8 +792,8 @@ class PrimaryTests extends munit.FunSuite {
     val s = "a<T>.b[20](30)"
     val tokens = t.lex(s)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchPrimary(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchPrimary( )
 
     assertEquals(result.kind, SyntaxKind.INVOCATION_EXPRESSION)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -809,8 +810,8 @@ class ExpressionTest extends munit.FunSuite {
     val t = Tokenizer()
     val s = "+12"
     val tokens = t.lex(s)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchExpression(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression( )
 
     assertEquals(result.kind(), SyntaxKind.UNARY_PLUS_EXPRESSION)
     assertEquals(result.slot(0).kind(), Symbol.PLUS)
@@ -822,8 +823,8 @@ class ExpressionTest extends munit.FunSuite {
     val t = Tokenizer()
     val s = "if A\nelse\n  var b = 3\n return b"
     val tokens = t.lex(s)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.IF)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -842,8 +843,8 @@ class ExpressionTest extends munit.FunSuite {
     val s = "if A\n  var b = 3\n return b\nelse\n  val c = 4\n  return c"
     val t = Tokenizer()
     val tokens = t.lex(s)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.IF)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -864,8 +865,8 @@ class ExpressionTest extends munit.FunSuite {
     val s = "while A"
     val t = Tokenizer()
     val tokens = t.lex(s)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.WHILE)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -878,8 +879,8 @@ class ExpressionTest extends munit.FunSuite {
     val s = "while A\n  var b = 2\n  val v = 4"
     val t = Tokenizer()
     val tokens = t.lex(s)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.WHILE)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -894,8 +895,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "for i in range(10)"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.FOR_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.FOR)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -910,8 +911,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "for i in range(10)\n  var c = 3\n  b.c[f]"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.FOR_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.FOR)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
@@ -928,8 +929,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "b.c[f]"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
     assertEquals(result.slotCount(), 1)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -939,8 +940,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "b.c[f] for i in range"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
     assertEquals(result.slotCount(), 1)
     assertEquals(result.slot(0).kind, SyntaxKind.INDEX_EXPRESSION)
@@ -950,8 +951,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "-10"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchStatement(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchStatement( )
     assertEquals(result.kind, SyntaxKind.EXPRESSION_STATEMENT)
     assertEquals(result.slotCount(), 1)
     assertEquals(result.slot(0).kind, SyntaxKind.UNARY_MINUS_EXPRESSION)
@@ -961,8 +962,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "+123"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchExpression(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression( )
     assertEquals(result.kind, SyntaxKind.UNARY_PLUS_EXPRESSION)
     assertEquals(result.slotCount(), 2)
     assertEquals(result.slot(0).kind(), Symbol.PLUS)
@@ -973,8 +974,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "-123"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchExpression(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression( )
     assertEquals(result.kind, SyntaxKind.UNARY_MINUS_EXPRESSION)
     assertEquals(result.slotCount(), 2)
     assertEquals(result.slot(0).kind(), Symbol.MINUS)
@@ -985,8 +986,8 @@ class ExpressionTest extends munit.FunSuite {
     val code = "123 + 234"
     val t = Tokenizer()
     val tokens = t.lex(code)
-    val p = ParserImplementation.MyParser()
-    val result = p.matchExpression(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression( )
     assertEquals(result.kind, SyntaxKind.ADD_EXPRESSION)
     assertEquals(result.slotCount(), 3)
     assertEquals(result.slot(0).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
@@ -1001,8 +1002,8 @@ class ExpressionTest extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchVariableDef(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchVariableDef( )
 
     println(result)
 
@@ -1015,10 +1016,29 @@ class ExpressionTest extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
-    val result = p.matchExpression(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+
+    val result = p.matchExpression( )
 
     println(result)
+  }
+  
+  
+  test("Test >> - generic") {
+    val t = Tokenizer()
+    val s = "list<list<int>>"
+    val tokens = t.lex(s)
+    println(tokens)
+
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression()
+
+
+    assertEquals(result.kind(), SyntaxKind.GENERIC_NAME_EXPRESSION)
+    assertEquals(result.slot(3).kind(), Symbol.GREATER_THAN)
+    assertEquals(result.slot(2).slot(0).slot(3).kind(), Symbol.GREATER_THAN)
+
+
   }
 }
 
@@ -1035,7 +1055,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1051,7 +1071,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1067,7 +1087,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1085,7 +1105,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1104,7 +1124,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1119,7 +1139,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1132,7 +1152,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
   }
@@ -1147,7 +1167,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
@@ -1177,7 +1197,7 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p = ParserImplementation.MyParser()
+    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
 
@@ -1192,7 +1212,7 @@ class BaseTests extends munit.FunSuite {
 //
 //    println(tokens)
 //
-//    val p = ParserImplementation.MyParser()
+//    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
 //    val result = p.parse(s)
 //
 //  }

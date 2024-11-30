@@ -18,6 +18,8 @@ object Main {
     //    test = test.shuffled(true)
     //    test = test.forceLineTerminators(Mixed)
         syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+    
+    
 
     WebServer.start()
     val parser = MyParser()

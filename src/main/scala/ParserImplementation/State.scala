@@ -1,9 +1,9 @@
 package ParserImplementation
 
-import syspro.tm.lexer.Token
+import syspro.tm.lexer.{Symbol, SymbolToken, Token}
 import syspro.tm.parser.AnySyntaxKind
-import State.OpenOrClose.{PAREN, LESS_THAN, BRACKET} 
-import State.OpenOrClose
+
+import syspro.tm.lexer.Symbol.*
 
 class State {
   var idx = 0
@@ -14,31 +14,15 @@ class State {
 
   var indentLevel = 0
   
-  var buffOfNodes: Vector[MySyntaxNode] = Vector[MySyntaxNode]()
-  
-  def drop(): Unit = length = 0
-  
-  def open(openType: OpenOrClose): Unit = {
-    openType match
-      case LESS_THAN => openLessThan = true
-      case PAREN => openParen = true
-      case BRACKET => openBracket = true
-  }
-  
-  def isOpen(openType: OpenOrClose): Boolean = {
-    openType match
-      case LESS_THAN => openLessThan
-      case PAREN => openParen
-      case BRACKET => openBracket
-  }
-  
-}
+  var tokens: Vector[Token] = Vector[Token]()
 
-
-object State {
-  enum OpenOrClose {
-    case LESS_THAN
-    case PAREN
-    case BRACKET
+  def doubleToken(tokens: Vector[Token]): Vector[Token] = {
+    tokens(idx) match
+      case greater: SymbolToken if greater.symbol == GREATER_THAN_GREATER_THAN =>
+        val firstToken = SymbolToken(greater.start, greater.end - greater.trailingTriviaLength - 1, greater.leadingTriviaLength, 0, GREATER_THAN)
+        val secondToken = SymbolToken(greater.end - greater.trailingTriviaLength, greater.end, 0, greater.trailingTriviaLength, GREATER_THAN)
+        tokens.patch(idx, Vector[Token](firstToken, secondToken), 1)
   }
+
+  
 }
