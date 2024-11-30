@@ -1,6 +1,6 @@
 package ParserImplementation
 
-import syspro.tm.lexer.{BooleanLiteralToken, IdentifierToken, IndentationToken, IntegerLiteralToken, Keyword, KeywordToken, RuneLiteralToken, StringLiteralToken, Symbol, SymbolToken, Token}
+import syspro.tm.lexer.{BadToken, BooleanLiteralToken, IdentifierToken, IndentationToken, IntegerLiteralToken, Keyword, KeywordToken, RuneLiteralToken, StringLiteralToken, Symbol, SymbolToken, Token}
 import syspro.tm.lexer.Keyword.*
 import syspro.tm.lexer.Symbol.*
 import LexerImplementation.Tokens.LiteralTokens.isNull
@@ -48,6 +48,7 @@ object Checkers {
       case boolean: BooleanLiteralToken => true
       case string: StringLiteralToken => true
       case int: IntegerLiteralToken => true
+      case bad: BadToken => true
       case _ => false
   }
 
@@ -105,6 +106,7 @@ object Checkers {
 
   def isPrimary(token: Token): Boolean = {
     token match
+      case bad: BadToken => true
       case nameExpression if isNameExpression(nameExpression) => true
       case identifierToken: IdentifierToken if identifierToken.contextualKeyword != null =>
         identifierToken.contextualKeyword match

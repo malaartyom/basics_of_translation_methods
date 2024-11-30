@@ -993,6 +993,33 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.slot(1).kind(), Symbol.PLUS)
     assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
   }
+
+  test("0") {
+    val t = Tokenizer()
+    val s = """val _range: Range"""
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchVariableDef(tokens.asScala.toVector)
+
+    println(result)
+
+  }
+
+  test("Test for 0") {
+    val t = Tokenizer()
+    val s = "_index < _array.length"
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.matchExpression(tokens.asScala.toVector)
+
+    println(result)
+  }
 }
 
 class BaseTests extends munit.FunSuite {
@@ -1063,6 +1090,24 @@ class BaseTests extends munit.FunSuite {
 
     println(result)
 
+  }
+  test("Indent8") {
+    val t = Tokenizer()
+    val s = """
+              |  class Indent8
+              |    val x = 42
+              |
+              |
+              |""".stripMargin
+
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser()
+    val result = p.parse(s)
+
+    println(result)
   }
   test("Bad2") {
     val t = Tokenizer()
@@ -1152,3 +1197,4 @@ class BaseTests extends munit.FunSuite {
 //
 //  }
 }
+//TODO: Check if all test work

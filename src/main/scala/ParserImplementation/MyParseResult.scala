@@ -22,8 +22,7 @@ class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends Pa
   
   def addToRoot(mySyntaxNode: SyntaxNode): ListBuffer[SyntaxNode] = rootNode.add(mySyntaxNode)
   
-
-
-
-
+  def addInvalidRange(start: Int, end: Int): ListBuffer[TextSpan] = invalid_ranges.append(TextSpan.fromBounds(start , end))
+  
+  
 }
