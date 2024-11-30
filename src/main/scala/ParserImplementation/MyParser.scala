@@ -454,6 +454,7 @@ case class MyParser() extends Parser {
         list.add(matchStatement(tokens))
       }
       if (list.slotCount() == 0) {
+
         node.add(null)
       }
       else {
@@ -698,7 +699,9 @@ case class MyParser() extends Parser {
     var first = true
     while (state.idx < tokens.length && isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx))))
       tokens(state.idx) match
-        case bad: BadToken => node = MySyntaxNode(BAD, bad); state.idx += 1
+        case bad: BadToken => node =MySyntaxNode(BAD, bad)
+          parseResult.addInvalidRange(tokens(state.idx).start, tokens(state.idx).end + 1)
+          state.idx += 1
         case nameExpr if isNameExpression(nameExpr) => node = matchNameExpression(tokens)
         case identifier: IdentifierToken if identifier.contextualKeyword != null && identifier.contextualKeyword == NULL =>
           node = MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, identifier); state.idx += 1
