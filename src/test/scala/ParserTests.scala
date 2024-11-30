@@ -111,7 +111,7 @@ class TypeParamDefinitionTests extends munit.FunSuite {
     assertEquals(r.kind(), SyntaxKind.TYPE_PARAMETER_DEFINITION)
     assertEquals(r.slotCount(), 2)
     assertEquals(r.slot(0).kind(), SyntaxKind.IDENTIFIER)
-    assertEquals(r.slot(1).kind(), null)
+    assertEquals(r.slot(1), null)
 
 
   }
@@ -221,10 +221,10 @@ class FunctionDefinitionsTests extends munit.FunSuite {
     assertEquals(r.slot(1).kind(), Keyword.DEF)
     assertEquals(r.slot(2).kind(), SyntaxKind.IDENTIFIER)
     assertEquals(r.slot(3).kind(), Symbol.OPEN_PAREN)
-    assertEquals(r.slot(4).kind(), SyntaxKind.SEPARATED_LIST)
+    assertEquals(r.slot(4), null)
     assertEquals(r.slot(5).kind(), Symbol.CLOSE_PAREN)
-    assertEquals(r.slot(6).kind(), null)
-    assertEquals(r.slot(7).kind(), null)
+    assertEquals(r.slot(6), null)
+    assertEquals(r.slot(7), null)
     assertEquals(r.slot(8).kind(), SyntaxKind.INDENT)
     assertEquals(r.slot(9).kind(), SyntaxKind.LIST)
     assertEquals(r.slot(10).kind(), SyntaxKind.DEDENT)
@@ -267,11 +267,11 @@ class VariableDefinitionTests extends munit.FunSuite {
     val r = p.matchVariableDef( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
-    assertEquals(r.slotCount(), 4)
+    assertEquals(r.slotCount(), 6)
     assertEquals(r.slot(0).kind(), Keyword.VAR)
     assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER)
-    assertEquals(r.slot(2).kind(), null)
-    assertEquals(r.slot(3).kind(), null)
+    assertEquals(r.slot(2), null)
+    assertEquals(r.slot(3), null)
 
   }
 
@@ -284,11 +284,11 @@ class VariableDefinitionTests extends munit.FunSuite {
     val r = p.matchVariableDef( )
 
     assertEquals(r.kind(), SyntaxKind.VARIABLE_DEFINITION)
-    assertEquals(r.slotCount(), 4)
+    assertEquals(r.slotCount(), 6)
     assertEquals(r.slot(0).kind(), Keyword.VAL)
     assertEquals(r.slot(1).kind(), SyntaxKind.IDENTIFIER)
-    assertEquals(r.slot(2).kind(), null)
-    assertEquals(r.slot(3).kind(), null)
+    assertEquals(r.slot(2), null)
+    assertEquals(r.slot(3), null)
 
   }
 
@@ -828,9 +828,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.kind, SyntaxKind.IF_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.IF)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
-    assertEquals(result.slot(2).kind(), null)
-    assertEquals(result.slot(3).kind(), null)
-    assertEquals(result.slot(4).kind(), null)
+    assertEquals(result.slot(2), null)
+    assertEquals(result.slot(3), null)
+    assertEquals(result.slot(4), null)
     assertEquals(result.slot(5).kind(), Keyword.ELSE)
     assertEquals(result.slot(6).kind(), SyntaxKind.INDENT)
     assertEquals(result.slot(7).kind, SyntaxKind.LIST)
@@ -870,9 +870,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.kind, SyntaxKind.WHILE_STATEMENT)
     assertEquals(result.slot(0).kind, Keyword.WHILE)
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
-    assertEquals(result.slot(2).kind(), null)
-    assertEquals(result.slot(3).kind(), null)
-    assertEquals(result.slot(4).kind(), null)
+    assertEquals(result.slot(2), null)
+    assertEquals(result.slot(3), null)
+    assertEquals(result.slot(4), null)
   }
 
   test("Statement normal while") {
@@ -902,9 +902,9 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.slot(1).kind, SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
     assertEquals(result.slot(2).kind, Keyword.IN)
     assertEquals(result.slot(3).kind(), SyntaxKind.INVOCATION_EXPRESSION)
-    assertEquals(result.slot(4).kind(), null)
-    assertEquals(result.slot(5).kind(), null)
-    assertEquals(result.slot(6).kind(), null)
+    assertEquals(result.slot(4), null)
+    assertEquals(result.slot(5), null)
+    assertEquals(result.slot(6), null)
   }
 
   test("Statement complicated for") {

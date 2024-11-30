@@ -475,7 +475,7 @@ case class MyParser() extends Parser {
           state.idx += 1
         }
         val end = tokens(state.idx - 1).end
-        parseResult.addInvalidRange(start, end)
+        parseResult.addInvalidRange(start, end + 1)
         node.add(DEDENT, tokens(state.idx))
         state.indentLevel -= 1
       }
