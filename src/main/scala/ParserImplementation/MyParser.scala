@@ -22,7 +22,7 @@ case class MyParser() extends Parser {
 
   def matchTypeBound(): MySyntaxNode = {
     val node = MySyntaxNode(TYPE_BOUND)
-    node.add(Symbol.BOUND, tokens(state.idx)) // TODO: Check if not BOUND ??? Same in all other match* functions
+    node.add(Symbol.BOUND, tokens(state.idx)) // TODO: Check if not BOUND Same in all other match* functions
     state.idx += 1
 
     if (isNameExpression(tokens(state.idx))) {
@@ -69,15 +69,20 @@ case class MyParser() extends Parser {
       node.add(terminal, newToken) // TODO: Func in state
       state.idx += 1
     } else {
-      println(tokens(state.idx))
-      ???
+      node.addFail(1)
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 0)
+      state.idx += 1
     }
 
     if (isIdentifier(tokens(state.idx))) {
       node.add(IDENTIFIER, tokens(state.idx))
       state.idx += 1
     } else {
-      ???
+      node.addFail(1)
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 1)
+      state.idx += 1
     }
 
     if (isSymbol(tokens(state.idx), Symbol.LESS_THAN)) {
@@ -94,7 +99,13 @@ case class MyParser() extends Parser {
           if (isTypeParameterDef(tokens(state.idx))) {
             sepList.add(matchTypeParamDef())
           } else {
-            // TODO: что-то плохое надо пропустить запятую и дальше парсить
+            while (!isTypeParameterDef(tokens(state.idx))) {
+              sepList.addFail(1)
+              parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+              parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 2)
+              state.idx += 1
+            }
+            // TODO: добавить в качестве отдельной фунции в стейт
           }
         }
         if (sepList.slotCount() == 0) {
@@ -151,6 +162,11 @@ case class MyParser() extends Parser {
         // Нет Dedenta но есть Indent очеьн плохо
       }
     } else {
+      while (!isDefinition(tokens(state.idx))) {
+        parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+        parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 7) // TODO: Func
+        state.idx += 1
+      }
       node.addFail(3)
       // Empty member block
     }
@@ -206,13 +222,13 @@ case class MyParser() extends Parser {
         }
       }
       if (sepList.slotCount() == 0) {
-        node.add(null)
+        node.addFail(1)
       }
       else {
         node.add(sepList)
       }
     } else {
-      node.add(null) // TODO: Think about it ???
+      node.addFail(1)
     }
 
     if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
@@ -254,19 +270,7 @@ case class MyParser() extends Parser {
         state.idx += 1
         state.indentLevel -= 1
       } else {
-        val start = tokens(state.idx).start
-        while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
-          if (isIndent(tokens(state.idx))) {
-            state.indentLevel += 1
-          } else if (isDedent(tokens(state.idx))) {
-            state.indentLevel -= 1
-          }
-          state.idx += 1
-        }
-        val end = tokens(state.idx - 1).end
-        parseResult.addInvalidRange(start, end) // TODO Add in state
-        node.add(DEDENT, tokens(state.idx))
-        state.indentLevel -= 1
+        skipUntilDedent(node, thisIndentLevel)
         // Нет Dedenta но есть Indent очень плохо
       }
     } else {
@@ -291,13 +295,20 @@ case class MyParser() extends Parser {
     if (isVariableDefStart(tokens(state.idx))) {
       node.add(matchVariableDefStart())
     } else {
-      ???
+      node.addFail(1)
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 3)
+      state.idx += 1
+      // TODO: добавить в качестве отдельной фунции в стейт
     }
     if (isIdentifier(tokens(state.idx))) {
       node.add(IDENTIFIER, tokens(state.idx))
       state.idx += 1
     } else {
-      ???
+      node.addFail(1)
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 1)
+      state.idx += 1
     }
     if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.COLON)) {
       node.add(Symbol.COLON, tokens(state.idx))
@@ -306,7 +317,12 @@ case class MyParser() extends Parser {
         node.add(matchNameExpression())
       }
       else {
-        ??? // TODO: it is a bad situation
+        while (!isDefinition(tokens(state.idx))) {
+          node.addFail(1)
+          parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: In function
+          parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 4)
+          state.idx += 1
+        }
       }
     } else {
       node.addFail(2)
@@ -320,6 +336,8 @@ case class MyParser() extends Parser {
       } else {
         while (!isDefinition(tokens(state.idx)) && !isStatement(tokens(state.idx))) {
           node.addFail(1)
+          parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: In function
+          parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 6)
           state.idx += 1
         }
         // TODO: Bad Situation
@@ -332,12 +350,12 @@ case class MyParser() extends Parser {
   }
 
   def matchVariableDefStart(): MySyntaxNode = {
-    var node = MySyntaxNode(BAD)
+    var node = MySyntaxNode(BadSyntaxKind)
     tokens(state.idx) match
       case keyword: KeywordToken => keyword.keyword match
         case VAR | VAL => node = MySyntaxNode(keyword.keyword, tokens(state.idx))
-        case _ => node
-      case _ => // TODO: Think about it ???
+        case _ => MySyntaxNode(BadSyntaxKind, tokens(state.idx))
+      case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); MySyntaxNode(BadSyntaxKind, tokens(state.idx))// TODO: Think about it
     state.idx += 1
     node
   }
@@ -363,14 +381,17 @@ case class MyParser() extends Parser {
       state.idx += 1
     }
     else {
-      ???
+      node.addFail(1)
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 1)
+      state.idx += 1
     }
     if (isSymbol(tokens(state.idx), Symbol.COLON)) {
       node.add(Symbol.COLON, tokens(state.idx))
       state.idx += 1
     }
     else {
-      ???
+      // Everything is ok
     }
     if (isNameExpression(tokens(state.idx))) {
       node.add(matchNameExpression())
@@ -386,7 +407,7 @@ case class MyParser() extends Parser {
         node
       case primary if isPrimary(primary) =>
         val res = matchPrimary()
-        var node = MySyntaxNode()
+        var node = MySyntaxNode(BadSyntaxKind)
         if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.EQUALS)) {
           node = MySyntaxNode(ASSIGNMENT_STATEMENT)
           node.add(res)
@@ -447,7 +468,7 @@ case class MyParser() extends Parser {
     if (isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
       state.indentLevel += 1
-      val thisIndentLevel = state.indentLevel
+      val thisIndentLevel = state.indentLevel // TODO: In state
       val list = MySyntaxNode(LIST)
       state.idx += 1
       while (isStatement(tokens(state.idx))) {
@@ -455,7 +476,7 @@ case class MyParser() extends Parser {
       }
       if (list.slotCount() == 0) {
         val newNode = MySyntaxNode(IF_STATEMENT)
-        node.add(null)
+        node.addFail(1)
       }
       else {
         node.add(list)
@@ -465,19 +486,7 @@ case class MyParser() extends Parser {
         state.idx += 1
         state.indentLevel -= 1
       } else {
-        val start = tokens(state.idx).start
-        while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
-          if (isIndent(tokens(state.idx))) {
-            state.indentLevel += 1
-          } else if (isDedent(tokens(state.idx))) {
-            state.indentLevel -= 1
-          }
-          state.idx += 1
-        }
-        val end = tokens(state.idx - 1).end
-        parseResult.addInvalidRange(start, end + 1)
-        node.add(DEDENT, tokens(state.idx))
-        state.indentLevel -= 1
+        skipUntilDedent(node, thisIndentLevel)
       }
     } else {
       node.addFail(3)
@@ -515,6 +524,21 @@ case class MyParser() extends Parser {
     node
   }
 
+  private def skipUntilDedent(node: MySyntaxNode, thisIndentLevel: Int): Unit = {  // TODO: MOve in stat
+    while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
+      if (isIndent(tokens(state.idx))) {
+        state.indentLevel += 1
+      } else if (isDedent(tokens(state.idx))) {
+        state.indentLevel -= 1
+      }
+      parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+      parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 7)
+      state.idx += 1
+    }
+    node.add(DEDENT, tokens(state.idx))
+    state.indentLevel -= 1
+  }
+
   private def matchWhile() = {
     val node = MySyntaxNode(WHILE_STATEMENT)
     node.add(WHILE, tokens(state.idx))
@@ -527,6 +551,8 @@ case class MyParser() extends Parser {
     }
     if (state.idx < tokens.length && isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
+      state.indentLevel += 1
+      val thisIndentLevel = state.indentLevel
       state.idx += 1
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
@@ -541,8 +567,9 @@ case class MyParser() extends Parser {
       if (isDedent(tokens(state.idx))) {
         node.add(DEDENT, tokens(state.idx))
         state.idx += 1
+        state.indentLevel -= 1
       } else {
-        ??? // There is no Dedent but is Indent
+        skipUntilDedent(node, thisIndentLevel) // There is no Dedent but is Indent
       }
     }
     else node.addFail(3)
@@ -570,6 +597,7 @@ case class MyParser() extends Parser {
     }
     if (state.idx < tokens.length && isIndent(tokens(state.idx))) {
       node.add(INDENT, tokens(state.idx))
+      var thisIndentLevel = state.indentLevel
       state.idx += 1
       val list = MySyntaxNode(LIST)
       while (isStatement(tokens(state.idx))) {
@@ -583,9 +611,10 @@ case class MyParser() extends Parser {
       }
       if (isDedent(tokens(state.idx))) {
         node.add(DEDENT, tokens(state.idx))
+        thisIndentLevel -= 1
         state.idx += 1
       } else {
-        ??? // There is no Dedent but is Indent
+        skipUntilDedent(node, thisIndentLevel) // There is no Dedent but is Indent
       }
     } else {
       node.addFail(3)
@@ -626,14 +655,24 @@ case class MyParser() extends Parser {
         // this.x * 12 + 30
         val node = createOpNode(opStack.pop())
         node.add(nodeStack.pop())
-        node.addLeft(nodeStack.pop()) // TODO: addLeft
+        node.addLeft(nodeStack.pop())
         nodeStack.push(node)
         tokens(state.idx) match
           case symbol: SymbolToken => opStack.push(symbol)
           case keyword: KeywordToken => opStack.push(keyword)
       }
       state.idx += 1
-      nodeStack.push(matchPrimary())
+      if (isPrimary(tokens(state.idx))) {
+        nodeStack.push(matchPrimary())
+      } else {
+        nodeStack.push(null)
+        while (state.idx < tokens.length && !isExpressionContinue(tokens(state.idx))) {
+          parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: USe in all cases
+          state.idx += 1
+        }
+        // TODO: Add diagnostic
+      }
+
     }
 
     while (opStack.nonEmpty) {
@@ -646,7 +685,7 @@ case class MyParser() extends Parser {
   }
 
   def matchUnary(): MySyntaxNode = {
-    var node = MySyntaxNode()
+    var node = MySyntaxNode(BadSyntaxKind)
     tokens(state.idx) match
       case symbol: SymbolToken if isUnary(tokens(state.idx)) =>
         symbol.symbol match
@@ -695,12 +734,12 @@ case class MyParser() extends Parser {
   }
 
   private def matchDefaultPrimary(): MySyntaxNode = {
-    var node: MySyntaxNode = MySyntaxNode()
+    var node: MySyntaxNode = MySyntaxNode(BadSyntaxKind)
     var first = true
     while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
         case bad: BadToken => node =MySyntaxNode(BAD, bad)
-          parseResult.addInvalidRange(tokens(state.idx).start, tokens(state.idx).end + 1)
+          parseResult.addInvalidRange(bad.fullSpan())
           state.idx += 1
         case nameExpr if isNameExpression(nameExpr) => node = matchNameExpression()
         case identifier: IdentifierToken if identifier.contextualKeyword != null && identifier.contextualKeyword == NULL =>
@@ -824,7 +863,9 @@ case class MyParser() extends Parser {
       if (isNameExpression(tokens(state.idx))) {
         sepList.add(matchNameExpression())
       } else {
-        ???
+        state.idx -= 2
+        node = matchIdentifierNameExpression()
+        return node
       }
 
       while (isSymbol(tokens(state.idx), Symbol.COMMA)) {
@@ -833,7 +874,11 @@ case class MyParser() extends Parser {
         if (isNameExpression(tokens(state.idx))) {
           sepList.add(matchNameExpression())
         } else {
-          ???
+          while (!isDefinition(tokens(state.idx))) {
+            parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: In function
+            parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 5)
+            state.idx += 1
+          }
         }
       }
       if (sepList.slotCount() == 0) {
@@ -881,7 +926,7 @@ case class MyParser() extends Parser {
     parseResult
   }
 
-  def setTokens(newTokens: Vector[Token]) = {
+  def setTokens(newTokens: Vector[Token]): Unit = {
     tokens = newTokens
   }
 }

@@ -1,6 +1,6 @@
 package ParserImplementation
 import syspro.tm.lexer.Token
-import syspro.tm.parser.{AnySyntaxKind, Diagnostic, ParseResult, SyntaxNode, TextSpan}
+import syspro.tm.parser.{AnySyntaxKind, Diagnostic, DiagnosticInfo, ParseResult, SyntaxNode, TextSpan}
 
 import java.util
 import scala.collection.mutable.ListBuffer
@@ -26,5 +26,10 @@ class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends Pa
     println(TextSpan.fromBounds(start , end))
     invalid_ranges.append(TextSpan.fromBounds(start , end))
   
+  def addInvalidRange(textSpan: TextSpan): ListBuffer[TextSpan] = invalid_ranges.append(textSpan)
+  
+  def addDiagnostic(textSpan: TextSpan, code: Int) =
+    val diag = Diagnostic(DiagnosticInfo(MyErrorCode(code), null), textSpan, List[Diagnostic]().asJava)  
+    diagnostic.append(diag)
   
 }

@@ -1,8 +1,8 @@
 package ParserImplementation
 
+import ParserImplementation.Checkers.isDedent
 import syspro.tm.lexer.{Symbol, SymbolToken, Token}
 import syspro.tm.parser.AnySyntaxKind
-
 import syspro.tm.lexer.Symbol.*
 
 class State {
@@ -24,5 +24,6 @@ class State {
         tokens.patch(idx, Vector[Token](firstToken, secondToken), 1)
   }
 
+       
   
 }

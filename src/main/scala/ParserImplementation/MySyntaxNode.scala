@@ -5,7 +5,7 @@ import syspro.tm.parser.{AnySyntaxKind, SyntaxNode}
 import scala.collection.mutable.ListBuffer
 
 
-class MySyntaxNode(var1: AnySyntaxKind = null, var2: Token = null) extends SyntaxNode {
+class MySyntaxNode(var1: AnySyntaxKind, var2: Token = null) extends SyntaxNode {
   var tokenKind: AnySyntaxKind = var1
   var tokenType: Token = var2
   var children: ListBuffer[SyntaxNode] = ListBuffer[SyntaxNode]()

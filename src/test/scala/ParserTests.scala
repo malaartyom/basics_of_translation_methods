@@ -1018,7 +1018,8 @@ class ExpressionTest extends munit.FunSuite {
 
     val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
 
-    val result = p.matchExpression( )
+    val result = p.matchExpression()
+    assertEquals(result.kind(), SyntaxKind.LESS_THAN_EXPRESSION)
 
     println(result)
   }
@@ -1038,11 +1039,40 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.slot(3).kind(), Symbol.GREATER_THAN)
     assertEquals(result.slot(2).slot(0).slot(3).kind(), Symbol.GREATER_THAN)
 
+  }
 
+  test("if c < 128u32") {
+    val t = Tokenizer()
+    val s = "c < 128u32"
+    val tokens = t.lex(s)
+    println(tokens)
+
+    val p = ParserImplementation.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression()
+
+    assertEquals(result.kind(), SyntaxKind.LESS_THAN_EXPRESSION)
+    assertEquals(result.slot(0).kind(), SyntaxKind.IDENTIFIER_NAME_EXPRESSION)
+    assertEquals(result.slot(1).kind(), Symbol.LESS_THAN)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
   }
 }
 
 class BaseTests extends munit.FunSuite {
+
+  test("x.add(16 > > 2)") {
+    val t = Tokenizer()
+    val s = "x.add(16 > > 2)"
+    val tokens = t.lex(s)
+    println(tokens)
+
+    val p = ParserImplementation.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression()
+
+    println(result)
+
+  }
 
   test("Indent2") {
     val t = Tokenizer()
@@ -1055,7 +1085,8 @@ class BaseTests extends munit.FunSuite {
 
     println(tokens)
 
-    val p =  ParserImplementation.MyParser();p.setTokens(tokens.asScala.toVector)
+    val p =  ParserImplementation.MyParser();
+    p.setTokens(tokens.asScala.toVector)
     val result = p.parse(s)
 
     println(result)
