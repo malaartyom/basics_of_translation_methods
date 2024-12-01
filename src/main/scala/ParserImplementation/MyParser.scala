@@ -633,7 +633,9 @@ case class MyParser() extends Parser {
       nodeStack.push(operation)
       // -this.x + 42 * 13
       // a is b x
-    } else if (isPrimary(tokens(state.idx))) nodeStack.push(matchPrimary())
+    } else if (isPrimary(tokens(state.idx)))
+      nodeStack.push(matchPrimary())
+
     while (state.idx < tokens.length && isExpressionContinue(tokens(state.idx))) {
       // TODO: Remove pattern-matching
       val currentPriority = {
@@ -665,15 +667,16 @@ case class MyParser() extends Parser {
       if (isPrimary(tokens(state.idx))) {
         nodeStack.push(matchPrimary())
       } else {
-        nodeStack.push(null)
         parseResult.addInvalidRange(tokens(state.idx).fullSpan())
         state.idx += 1
-        while (state.idx < tokens.length && !isDefinition(tokens(state.idx))) {
+        while (state.idx < tokens.length && !isDefinition(tokens(state.idx)) && !isSymbol(tokens(state.idx), CLOSE_PAREN)) {
           parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: USe in all cases
           parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 10)
           state.idx += 1
         }
-        // TODO: Add diagnostic
+        if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
+          nodeStack.push(matchPrimary())
+        }
       }
 
     }
