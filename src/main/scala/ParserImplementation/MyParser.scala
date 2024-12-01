@@ -148,21 +148,22 @@ case class MyParser() extends Parser {
         state.idx += 1
         state.indentLevel -= 1
       } else {
-        boundary:
-          while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
-            if (isIndent(tokens(state.idx))) {
-              state.indentLevel += 1
-            } else if (isDedent(tokens(state.idx))) {
-              state.indentLevel -= 1
-            }
-            state.idx += 1
+        while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
+          if (isIndent(tokens(state.idx))) {
+            state.indentLevel += 1
+          } else if (isDedent(tokens(state.idx))) {
+            state.indentLevel -= 1
           }
+          parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+          parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 7) // TODO: Func
+          state.idx += 1
+        }
         node.add(DEDENT, tokens(state.idx))
         state.indentLevel -= 1
         // Нет Dedenta но есть Indent очеьн плохо
       }
     } else {
-      while (state.idx < tokens.length && !isDefinition(tokens(state.idx))) {
+      while (state.idx < tokens.length && !isTypeDefStart(tokens(state.idx))) {
         parseResult.addInvalidRange(tokens(state.idx).fullSpan())
         parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 7) // TODO: Func
         state.idx += 1
@@ -280,7 +281,7 @@ case class MyParser() extends Parser {
   }
 
   def matchFuncDefStart(): MySyntaxNode = {
-    var node = MySyntaxNode(BAD)
+    var node: MySyntaxNode = null
     tokens(state.idx) match
       case keyword: KeywordToken =>
         keyword.keyword match
@@ -350,12 +351,12 @@ case class MyParser() extends Parser {
   }
 
   def matchVariableDefStart(): MySyntaxNode = {
-    var node = MySyntaxNode(BAD)
+    var node: MySyntaxNode = null
     tokens(state.idx) match
       case keyword: KeywordToken => keyword.keyword match
         case VAR | VAL => node = MySyntaxNode(keyword.keyword, tokens(state.idx))
-        case _ => MySyntaxNode(BAD, tokens(state.idx))
-      case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); MySyntaxNode(BAD, tokens(state.idx))// TODO: Think about it
+        case _ => node = MySyntaxNode(BAD, tokens(state.idx))
+      case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); node = MySyntaxNode(BAD, tokens(state.idx)) // TODO: Think about it
     state.idx += 1
     node
   }
@@ -407,7 +408,7 @@ case class MyParser() extends Parser {
         node
       case primary if isPrimary(primary) =>
         val res = matchPrimary()
-        var node = MySyntaxNode(BAD)
+        var node: MySyntaxNode = null
         if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.EQUALS)) {
           node = MySyntaxNode(ASSIGNMENT_STATEMENT)
           node.add(res)
@@ -524,7 +525,7 @@ case class MyParser() extends Parser {
     node
   }
 
-  private def skipUntilDedent(node: MySyntaxNode, thisIndentLevel: Int): Unit = {  // TODO: MOve in stat
+  private def skipUntilDedent(node: MySyntaxNode, thisIndentLevel: Int): Unit = { // TODO: MOve in stat
     while (!isDedent(tokens(state.idx)) || state.indentLevel != thisIndentLevel) {
       if (isIndent(tokens(state.idx))) {
         state.indentLevel += 1
@@ -693,7 +694,7 @@ case class MyParser() extends Parser {
   }
 
   def matchUnary(): MySyntaxNode = {
-    var node = MySyntaxNode(BAD)
+    var node: MySyntaxNode = null
     tokens(state.idx) match
       case symbol: SymbolToken if isUnary(tokens(state.idx)) =>
         symbol.symbol match
@@ -742,11 +743,11 @@ case class MyParser() extends Parser {
   }
 
   private def matchDefaultPrimary(): MySyntaxNode = {
-    var node: MySyntaxNode = MySyntaxNode(BAD)
+    var node: MySyntaxNode = null
     var first = true
     while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
-        case bad: BadToken => node =MySyntaxNode(BAD, bad)
+        case bad: BadToken => node = MySyntaxNode(BAD, bad)
           parseResult.addInvalidRange(bad.fullSpan())
           state.idx += 1
         case nameExpr if isNameExpression(nameExpr) => node = matchNameExpression()
@@ -827,7 +828,7 @@ case class MyParser() extends Parser {
               invocationNode.add(null)
             }
             else {
-                invocationNode.add(sepList)
+              invocationNode.add(sepList)
             }
             if (state.idx < tokens.length && isSymbol(tokens(state.idx), CLOSE_PAREN)) {
               invocationNode.add(CLOSE_PAREN, tokens(state.idx))
@@ -936,8 +937,12 @@ case class MyParser() extends Parser {
           }
         }
       }
-    if (list.slotCount() == 0) {parseResult.addToRoot(null)}
-    else {parseResult.addToRoot(list)}
+    if (list.slotCount() == 0) {
+      parseResult.addToRoot(null)
+    }
+    else {
+      parseResult.addToRoot(list)
+    }
     parseResult
   }
 

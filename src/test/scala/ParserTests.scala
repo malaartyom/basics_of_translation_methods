@@ -1177,6 +1177,22 @@ class BaseTests extends munit.FunSuite {
 
     println(result)
   }
+  test("Indent9") {
+    val t = Tokenizer()
+    val s =
+      """	class Indent9	val x = 42""".stripMargin
+
+    val tokens = t.lex(s)
+
+    println(tokens)
+
+    val p = ParserImplementation.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.parse(s)
+
+    println(result)
+
+  }
   test("Bad2") {
     val t = Tokenizer()
     val s =
