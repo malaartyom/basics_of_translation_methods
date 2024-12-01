@@ -666,8 +666,11 @@ case class MyParser() extends Parser {
         nodeStack.push(matchPrimary())
       } else {
         nodeStack.push(null)
+        parseResult.addInvalidRange(tokens(state.idx).fullSpan())
+        state.idx += 1
         while (state.idx < tokens.length && !isExpressionContinue(tokens(state.idx))) {
           parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: USe in all cases
+          parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 10)
           state.idx += 1
         }
         // TODO: Add diagnostic
@@ -798,7 +801,7 @@ case class MyParser() extends Parser {
             val sepList = MySyntaxNode(SEPARATED_LIST)
             if (isExpression(tokens(state.idx))) {
               sepList.add(matchExpression())
-              while (isSymbol(tokens(state.idx), COMMA)) {
+              while (state.idx < tokens.length && isSymbol(tokens(state.idx), COMMA)) {
                 sepList.add(COMMA, tokens(state.idx))
                 state.idx += 1
                 if (isExpression(tokens(state.idx))) {
@@ -814,7 +817,7 @@ case class MyParser() extends Parser {
             else {
                 invocationNode.add(sepList)
             }
-            if (isSymbol(tokens(state.idx), CLOSE_PAREN)) {
+            if (state.idx < tokens.length && isSymbol(tokens(state.idx), CLOSE_PAREN)) {
               invocationNode.add(CLOSE_PAREN, tokens(state.idx))
               state.idx += 1
             }

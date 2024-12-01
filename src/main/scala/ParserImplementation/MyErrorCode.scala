@@ -11,7 +11,8 @@ case class MyErrorCode(var code: Int = -1) extends ErrorCode {
     4 -> "Missing Name Expression After Colon",
     5 -> "Error in Generic Name Expression",
     6 -> "Missing Expression",
-    7 -> "IDNENT ERROR"
+    7 -> "IDNENT ERROR",
+    10 -> "Two Separated Symbols Cannot Follow Each Other"
   )
 }
 
