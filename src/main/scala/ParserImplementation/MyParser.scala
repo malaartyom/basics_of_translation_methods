@@ -162,7 +162,7 @@ case class MyParser() extends Parser {
         // Нет Dedenta но есть Indent очеьн плохо
       }
     } else {
-      while (!isDefinition(tokens(state.idx))) {
+      while (state.idx < tokens.length && !isDefinition(tokens(state.idx))) {
         parseResult.addInvalidRange(tokens(state.idx).fullSpan())
         parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 7) // TODO: Func
         state.idx += 1
@@ -738,7 +738,7 @@ case class MyParser() extends Parser {
 
   private def matchDefaultPrimary(): MySyntaxNode = {
     var node: MySyntaxNode = MySyntaxNode(BadSyntaxKind)
-    var first = if (state.idx - 1 > 0 && isIdentifier(tokens(state.idx - 1))) false else true
+    var first = true
     while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
         case bad: BadToken => node =MySyntaxNode(BAD, bad)
@@ -787,7 +787,8 @@ case class MyParser() extends Parser {
               val parenNode = MySyntaxNode(INVOCATION_EXPRESSION)
               parenNode.add(OPEN_PAREN, symbolToken)
               state.idx += 1
-              parenNode.add(CLOSE_PAREN, tokens(state.idx))
+              parenNode.add(CLOSE_PAREN, symbolToken)
+              return parenNode
             }
 
             val parenNode = MySyntaxNode(PARENTHESIZED_EXPRESSION)
