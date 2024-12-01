@@ -350,12 +350,12 @@ case class MyParser() extends Parser {
   }
 
   def matchVariableDefStart(): MySyntaxNode = {
-    var node = MySyntaxNode(BadSyntaxKind)
+    var node = MySyntaxNode(BAD)
     tokens(state.idx) match
       case keyword: KeywordToken => keyword.keyword match
         case VAR | VAL => node = MySyntaxNode(keyword.keyword, tokens(state.idx))
-        case _ => MySyntaxNode(BadSyntaxKind, tokens(state.idx))
-      case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); MySyntaxNode(BadSyntaxKind, tokens(state.idx))// TODO: Think about it
+        case _ => MySyntaxNode(BAD, tokens(state.idx))
+      case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); MySyntaxNode(BAD, tokens(state.idx))// TODO: Think about it
     state.idx += 1
     node
   }
@@ -407,7 +407,7 @@ case class MyParser() extends Parser {
         node
       case primary if isPrimary(primary) =>
         val res = matchPrimary()
-        var node = MySyntaxNode(BadSyntaxKind)
+        var node = MySyntaxNode(BAD)
         if (state.idx < tokens.length && isSymbol(tokens(state.idx), Symbol.EQUALS)) {
           node = MySyntaxNode(ASSIGNMENT_STATEMENT)
           node.add(res)
@@ -667,6 +667,8 @@ case class MyParser() extends Parser {
       if (isPrimary(tokens(state.idx))) {
         nodeStack.push(matchPrimary())
       } else {
+        parseResult.addInvalidRange(nodeStack.top.fullSpan())
+        parseResult.addInvalidRange(opStack.top.fullSpan())
         parseResult.addInvalidRange(tokens(state.idx).fullSpan())
         state.idx += 1
         while (state.idx < tokens.length && !isDefinition(tokens(state.idx)) && !isSymbol(tokens(state.idx), CLOSE_PAREN)) {
@@ -691,7 +693,7 @@ case class MyParser() extends Parser {
   }
 
   def matchUnary(): MySyntaxNode = {
-    var node = MySyntaxNode(BadSyntaxKind)
+    var node = MySyntaxNode(BAD)
     tokens(state.idx) match
       case symbol: SymbolToken if isUnary(tokens(state.idx)) =>
         symbol.symbol match
@@ -740,7 +742,7 @@ case class MyParser() extends Parser {
   }
 
   private def matchDefaultPrimary(): MySyntaxNode = {
-    var node: MySyntaxNode = MySyntaxNode(BadSyntaxKind)
+    var node: MySyntaxNode = MySyntaxNode(BAD)
     var first = true
     while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
