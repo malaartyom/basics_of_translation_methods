@@ -1059,6 +1059,23 @@ class ExpressionTest extends munit.FunSuite {
 }
 
 class BaseTests extends munit.FunSuite {
+  test("ArrayList<ArrayList<Int64>>()") {
+    val t = Tokenizer()
+    val s = """def f()
+              |    x.add(16 > > 2)
+              |    val res = ArrayList<ArrayList<Int64>>()
+              |    res.add(x)
+              |""".stripMargin
+    val tokens = t.lex(s)
+    println(tokens)
+
+    val p = ParserImplementation.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.matchFuncDef()
+
+    println(result)
+
+  }
 
   test("x.add(16 > > 2)") {
     val t = Tokenizer()

@@ -668,7 +668,7 @@ case class MyParser() extends Parser {
         nodeStack.push(null)
         parseResult.addInvalidRange(tokens(state.idx).fullSpan())
         state.idx += 1
-        while (state.idx < tokens.length && !isExpressionContinue(tokens(state.idx))) {
+        while (state.idx < tokens.length && !isDefinition(tokens(state.idx))) {
           parseResult.addInvalidRange(tokens(state.idx).fullSpan()) // TODO: USe in all cases
           parseResult.addDiagnostic(tokens(state.idx).fullSpan(), 10)
           state.idx += 1
@@ -738,7 +738,7 @@ case class MyParser() extends Parser {
 
   private def matchDefaultPrimary(): MySyntaxNode = {
     var node: MySyntaxNode = MySyntaxNode(BadSyntaxKind)
-    var first = true
+    var first = if (state.idx - 1 > 0 && isIdentifier(tokens(state.idx - 1))) false else true
     while (state.idx < tokens.length && (isContinueOfPrimary(tokens(state.idx)) || (first && isPrimary(tokens(state.idx)))))
       tokens(state.idx) match
         case bad: BadToken => node =MySyntaxNode(BAD, bad)
@@ -783,6 +783,12 @@ case class MyParser() extends Parser {
             }
             node = bracketNode
           case OPEN_PAREN if first =>
+            if (isSymbol(tokens(state.idx + 1), CLOSE_PAREN)) {
+              val parenNode = MySyntaxNode(INVOCATION_EXPRESSION)
+              parenNode.add(OPEN_PAREN, symbolToken)
+              state.idx += 1
+              parenNode.add(CLOSE_PAREN, tokens(state.idx))
+            }
 
             val parenNode = MySyntaxNode(PARENTHESIZED_EXPRESSION)
             parenNode.add(OPEN_PAREN, symbolToken)
