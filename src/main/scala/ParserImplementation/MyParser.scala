@@ -288,6 +288,9 @@ case class MyParser() extends Parser {
           case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE => node = MySyntaxNode(keyword.keyword, tokens(state.idx));
       case _ =>
     state.idx += 1
+    if (node == null) {
+      node = MySyntaxNode(BAD, tokens(state.idx))
+    }
     node
   }
 
@@ -358,6 +361,9 @@ case class MyParser() extends Parser {
         case _ => node = MySyntaxNode(BAD, tokens(state.idx))
       case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); node = MySyntaxNode(BAD, tokens(state.idx)) // TODO: Think about it
     state.idx += 1
+    if (node == null) {
+      node = MySyntaxNode(BAD, tokens(state.idx))
+    }
     node
   }
 
@@ -422,6 +428,9 @@ case class MyParser() extends Parser {
         } else {
           node = MySyntaxNode(EXPRESSION_STATEMENT)
           node.add(res)
+        }
+        if (node == null) {
+          node = MySyntaxNode(BAD, tokens(state.idx))
         }
         node
       case expression if isExpression(expression) =>
@@ -704,7 +713,9 @@ case class MyParser() extends Parser {
           case EXCLAMATION => node = MySyntaxNode(LOGICAL_NOT_EXPRESSION)
         node.add(symbol.symbol, tokens(state.idx))
       case _ => println(s"Not a symbol but matchUnary called! ${tokens(state.idx)}")
-
+    if (node == null) {
+      node = MySyntaxNode(BAD, tokens(state.idx))
+    }
     state.idx += 1
     node
   }
@@ -756,7 +767,7 @@ case class MyParser() extends Parser {
         case keyword: KeywordToken => keyword.keyword match
           case THIS => node = MySyntaxNode(THIS_EXPRESSION); node.add(THIS, keyword); state.idx += 1
           case SUPER => node = MySyntaxNode(SUPER_EXPRESSION); node.add(SUPER, keyword); state.idx += 1
-          case NULL => MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, keyword); state.idx += 1
+          case NULL => node = MySyntaxNode(NULL_LITERAL_EXPRESSION); node.add(NULL, keyword); state.idx += 1
         case rune: RuneLiteralToken => node = MySyntaxNode(RUNE_LITERAL_EXPRESSION); node.add(RUNE, rune); state.idx += 1
         case int: IntegerLiteralToken => node = MySyntaxNode(INTEGER_LITERAL_EXPRESSION); node.add(INTEGER, int); state.idx += 1
         case str: StringLiteralToken => node = MySyntaxNode(STRING_LITERAL_EXPRESSION); node.add(STRING, str); state.idx += 1
@@ -839,6 +850,9 @@ case class MyParser() extends Parser {
           case CLOSE_PAREN => return node
         }
       first = false
+    if (node == null) {
+      node = MySyntaxNode(BAD, tokens(state.idx))
+    }
     node
   }
 
