@@ -1,7 +1,7 @@
 package LexerImplementation
 
-import ParserImplementation.MyParser
 import LexerImplementation.Processors.UnicodeProcessor
+import ParserImplementation.Parsing.MyParser
 import syspro.tm.WebServer
 import syspro.tm.lexer.Token
 import syspro.tm.lexer.TestMode
