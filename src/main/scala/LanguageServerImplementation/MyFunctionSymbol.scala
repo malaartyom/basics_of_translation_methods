@@ -11,9 +11,9 @@ case class MyFunctionSymbol(isNative: Boolean,
                             isVirtual: Boolean,
                             isAbstract: Boolean,
                             isOverride: Boolean,
-                            functionParameters: ListBuffer[VariableSymbol],
+                            var functionParameters: ListBuffer[VariableSymbol] = ListBuffer.empty,
                             returnType: TypeLikeSymbol,
-                            functionLocals: ListBuffer[VariableSymbol],
+                            var functionLocals: ListBuffer[VariableSymbol] = ListBuffer.empty,
                             owner: SemanticSymbol,
                             kind: SymbolKind,
                             name: String,
@@ -23,4 +23,9 @@ case class MyFunctionSymbol(isNative: Boolean,
   override def parameters(): util.List[_ <: VariableSymbol] = functionParameters.asJava
 
   override def locals(): util.List[_ <: VariableSymbol] = functionLocals.asJava
+
+  override def toString: String = name
+
+  override def hashCode(): Int = kind.hashCode() + name.hashCode + definition.hashCode()  + isVirtual.hashCode() + isOverride.hashCode() +
+    isAbstract.hashCode() + isNative.hashCode()
 }

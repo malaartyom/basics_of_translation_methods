@@ -1,11 +1,11 @@
 package LanguageServerImplementation
+
 import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{MemberSymbol, SymbolKind, TypeLikeSymbol, TypeSymbol}
+import java.util
 import scala.jdk.CollectionConverters.*
 
-import java.util
-
-class BaseTypeSymbol(val typeName: String) extends TypeSymbol {
+case class EmptyTypeSymbol(name: String) extends TypeSymbol {
 
   override def isAbstract: Boolean = false
 
@@ -19,11 +19,10 @@ class BaseTypeSymbol(val typeName: String) extends TypeSymbol {
 
   override def members(): util.List[_ <: MemberSymbol] = Vector.empty.toList.asJava
 
-  override def kind(): SymbolKind = SymbolKind.CLASS
-
-  override def name(): String = typeName
-
+  override def kind(): SymbolKind = null
+  
   override def definition(): SyntaxNode = null
 
-  override def toString: String = typeName
+  override def toString: String = name
+  
 }

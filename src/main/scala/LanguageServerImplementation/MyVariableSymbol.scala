@@ -3,15 +3,17 @@ package LanguageServerImplementation
 import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{SemanticSymbol, SymbolKind, TypeLikeSymbol, VariableSymbol}
 
-class MyVariableSymbol extends VariableSymbol {
+case class MyVariableSymbol(`type`: TypeLikeSymbol,
+                             owner: SemanticSymbol,
+                             kind: SymbolKind,
+                             name: String,
+                             definition: SyntaxNode 
+                           ) extends VariableSymbol {
+  override def toString: String = name
 
-  override def `type`(): TypeLikeSymbol = ???
 
-  override def owner(): SemanticSymbol = ???
-
-  override def kind(): SymbolKind = ???
-
-  override def name(): String = ???
-
-  override def definition(): SyntaxNode = ???
+  override def hashCode(): Int = name.hashCode + kind.hashCode()
+  
+  
+  
 }

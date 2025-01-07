@@ -5,8 +5,8 @@ import syspro.tm.lexer.Keyword
 
 import scala.collection.mutable
 
-case object Keywords {
-  private val HardKeywords: mutable.HashMap[String, Keyword] = mutable.HashMap(
+object Keywords {
+  val HardKeywords: mutable.HashMap[String, Keyword] = mutable.HashMap(
     "this" -> Keyword.THIS,
     "super" -> Keyword.SUPER,
     "is" -> Keyword.IS,
@@ -27,7 +27,7 @@ case object Keywords {
     "native" -> Keyword.NATIVE
   )
 
-  private val SoftKeywords: mutable.HashMap[String, Keyword] = mutable.HashMap(
+  val SoftKeywords: mutable.HashMap[String, Keyword] = mutable.HashMap(
     "class" -> Keyword.CLASS,
     "interface" -> Keyword.INTERFACE,
     "object" -> Keyword.OBJECT,

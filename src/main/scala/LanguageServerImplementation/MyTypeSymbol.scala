@@ -10,21 +10,25 @@ import scala.collection.mutable.ListBuffer
 case class MyTypeSymbol(
                     var typeArgs: ListBuffer[TypeLikeSymbol] = ListBuffer.empty,
                     var memberSymbols: ListBuffer[MemberSymbol] = ListBuffer.empty,
-                    var baseTypes: ListBuffer[TypeSymbol] = ListBuffer.empty,
+                    var baseTypesBuffer: ListBuffer[TypeSymbol] = ListBuffer.empty,
                     kind: SymbolKind,
                     name: String,
                     definition: SyntaxNode,
-                    var isAbstract: Boolean
+                    var isAbstract: Boolean = false 
                    )
   extends TypeSymbol {
   
-  override def typeArguments(): util.List[_ <: TypeLikeSymbol] = typeArgs.toList.asJava
+  override def typeArguments(): util.List[_ <: TypeLikeSymbol] = typeArgs.asJava
 
-  override def originalDefinition(): TypeSymbol = ???
+  override def baseTypes(): util.List[? <: TypeSymbol] = baseTypesBuffer.asJava
+
+  override def originalDefinition(): TypeSymbol = this
 
   override def construct(list: util.List[_ <: TypeLikeSymbol]): TypeSymbol = ???
 
-  override def members(): util.List[_ <: MemberSymbol] = memberSymbols.toList.asJava
+  override def members(): util.List[_ <: MemberSymbol] = memberSymbols.asJava
+
+  override def toString: String = name
   
   
 

@@ -1,11 +1,15 @@
 package LexerImplementation
 
+import LanguageServerImplementation.MyFunctionSymbol
 import LexerImplementation.Processors.UnicodeProcessor
 import ParserImplementation.Parsing.MyParser
 import syspro.tm.WebServer
 import syspro.tm.lexer.Token
 import syspro.tm.lexer.TestMode
 import syspro.tm.lexer.TestLineTerminators.{CarriageReturnLineFeed, LineFeed, Mixed, Native}
+import syspro.tm.symbols.FunctionSymbol
+
+import scala.collection.mutable.ListBuffer
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -17,15 +21,15 @@ object Main {
     //    test = test.parallel(true)
     //    test = test.shuffled(true)
     //    test = test.forceLineTerminators(Mixed)
-        syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
-    
-    
-
-    WebServer.start()
-    val parser = MyParser()
-    syspro.tm.Tasks.Parser.registerSolution(parser)
-    WebServer.waitForWebServerExit()
-
+//        syspro.tm.Tasks.Lexer.registerSolution(lexer, test)
+//
+//
+//
+//    WebServer.start()
+//    val parser = MyParser()
+//    syspro.tm.Tasks.Parser.registerSolution(parser)
+//    WebServer.waitForWebServerExit()
+  print(MyFunctionSymbol(isNative = false, isVirtual = false, isAbstract = false, isOverride = false, functionParameters = ListBuffer.empty, returnType = null, functionLocals = ListBuffer.empty, owner = null, kind = null, name = "bro", definition = null).isInstanceOf[FunctionSymbol])
   }
 
   private def printTokens(l: java.util.List[Token]): Unit = {
