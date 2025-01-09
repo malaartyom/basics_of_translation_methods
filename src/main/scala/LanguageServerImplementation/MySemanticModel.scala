@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters.*
 import java.util
 import scala.collection.mutable.ListBuffer
 import SyntaxNodeExtension.*
-import syspro.tm.parser
+import syspro.tm.{lexer, parser}
 import SyntaxNodeExtension.isNameExpr
 
 import scala.collection.mutable
@@ -18,7 +18,7 @@ import scala.collection.mutable
 class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
   extends SemanticModel {
 
-  var code: Int = -1
+  var code: Int = 0
   var ranges: ListBuffer[TextSpan] = parseResult.invalid_ranges
   var diagnostic: ListBuffer[Diagnostic] = parseResult.diagnostic
   var types: mutable.HashMap[String, TypeSymbol] = mutable.HashMap(
@@ -37,23 +37,22 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
 
   override def diagnostics(): util.Collection[Diagnostic] = parseResult.diagnostics()
 
-  override def lookupType(s: String): TypeSymbol = ???
+  override def lookupType(s: String): TypeSymbol = types(s)
 
   override def typeDefinitions(): util.List[_ <: TypeSymbol] =
-    this.code = 0
     val x = this.preTypeDefinitions()
-    this.code = 1
+    this.code = 2
     this.preTypeDefinitions()
 
   def preTypeDefinitions(): util.List[_ <: TypeSymbol] =
     val list = ListBuffer[MyTypeSymbol]()
     for (i <- 0 until rootNode.slot(0).slotCount()) {
-      list.append(checkTypeDefenition(rootNode.slot(0).slot(i)))
+      list.append(checkTypeDefinition(rootNode.slot(0).slot(i)))
     }
     list.asJava
 
-  def checkTypeDefenition(node: SyntaxNode): MyTypeSymbol =
-    types += (node.name -> null)
+  def checkTypeDefinition(node: SyntaxNode): MyTypeSymbol =
+    types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
     val symbol = MyTypeSymbol(
       kind = node.symbolKind,
       name = node.name,
@@ -70,7 +69,7 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
   def getTypeArgs(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[TypeLikeSymbol] = node.typeArgs.map(x => getTypeParameterDefinition(x, owner))
 
   def getTypeParameterDefinition(node: SyntaxNode, owner: SemanticSymbol): TypeLikeSymbol =
-    types += (node.name -> null)
+    types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
     MyTypeParameterSymbol(
       typeParamBounds = node.parents.map(getNameExpression), // TODO: ???? can be unexpected behavior
       owner = owner,
@@ -78,17 +77,6 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
       name = node.name,
       definition = node)
 
-  def getTypeParameter(node: SyntaxNode): TypeLikeSymbol =
-    if (node == null) return null
-    node.kind() match
-      case SyntaxKind.IDENTIFIER_NAME_EXPRESSION |
-         SyntaxKind.GENERIC_NAME_EXPRESSION |
-         SyntaxKind.OPTION_NAME_EXPRESSION =>
-        if (!types.contains(node.name)) {
-          types(node.name) = null
-        }
-        types(node.name) //   getNameExpression(node.slot(OPTION_NAME_EXPRESSION_NAME)) for
-      case _ => throw RuntimeException(s"Not a name expression in getNameExpression $node")
 
 
   def getNameExpression(node: SyntaxNode): TypeSymbol =
@@ -103,10 +91,16 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
           types += (node.name -> EmptyTypeSymbol(node.name))
           println("Type could be not declared below! Please check this!")
           // TODO: Check it in the end
-        } else if ((!types.contains(node.name) && code == 1) || types(node.name).isInstanceOf[EmptyTypeSymbol] && code == 1) {
+        } else if ((!types.contains(node.name) && code == 2) || types(node.name).isInstanceOf[EmptyTypeSymbol] && code == 2) {
           throw RuntimeException(s"No such type declared in code ${node.name}")
         }
-        types(node.name) //   getNameExpression(node.slot(OPTION_NAME_EXPRESSION_NAME)) for
+        else if (code == 1) {
+          node.kind() match
+            case SyntaxKind.GENERIC_NAME_EXPRESSION =>
+              types(node.name).construct(node.genericParams.map(getNameExpression).asJava)
+            case _ => types(node.name)
+        }
+        types(node.name)
       case _ => throw RuntimeException(s"Not a name expression in getNameExpression $node")
 
   def getMembers(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[MemberSymbol] = node.definitions.map(x => getDefinition(x, owner))
@@ -151,8 +145,13 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
           name = node.name,
           definition = node))
       case SyntaxKind.FOR_STATEMENT =>
+//        types += (node.forLocal.name -> MyTypeSymbol(
+//          kind = SymbolKind.LOCAL,
+//          name = node.forLocal.name,
+//          definition = node.forLocal
+//        ))
         result.append(MyVariableSymbol(
-          `type` = getNameExpression(node.forLocal),
+          `type` = getNameExpression(node.forLocal.`type`),
           owner = owner,
           kind = node.forLocal.symbolKind,
           name = node.forLocal.name,
@@ -161,11 +160,11 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
         result.addAll(node.forStatements.flatMap(x => getLocal(x, owner)))
       case SyntaxKind.EXPRESSION_STATEMENT if node.expression.kind() == SyntaxKind.IS_EXPRESSION =>
         result.append(MyVariableSymbol(
-          `type` = getNameExpression(node.expression.slot(2)),
+          `type` = types("Boolean"),
           owner = owner,
-          kind = node.expression.slot(2).symbolKind,
-          name = node.expression.slot(2).name,
-          definition = node.expression.slot(2) // TODO:
+          kind = node.expression.slot(3).symbolKind,
+          name = node.expression.slot(3).name,
+          definition = node.expression.slot(3) // TODO:
         ))
       case _ => ListBuffer.empty
 

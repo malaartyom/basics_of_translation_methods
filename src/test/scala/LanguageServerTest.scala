@@ -1,13 +1,74 @@
-import LanguageServerImplementation.{MyLanguageServer, MySemanticModel, MyTypeSymbol}
+import LanguageServerImplementation.{MyLanguageServer, MySemanticModel, MyTypeParameterSymbol, MyTypeSymbol, MyVariableSymbol}
 import LexerImplementation.Tokenizer
 import ParserImplementation.Parsing
+import ParserImplementation.Parsing.{MyParseResult, MyParser}
 import syspro.tm.parser.SyntaxKind
-import syspro.tm.symbols.SymbolKind
+import syspro.tm.symbols.{SymbolKind, TypeSymbol}
 
+import java.util
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
 
 class LanguageServerTest extends munit.FunSuite {
+
+
+  test("variable def") {
+    val s = "val s: Int64 = 12"
+    val l = Tokenizer().lex(s)
+    val p = MyParser()
+    p.setTokens(l.asScala.toVector)
+    val parsingResult = p.matchStatement()
+    val model = MySemanticModel(MyParseResult(null, null), null)
+    val res = model.getLocal(parsingResult, null).map(x => x.asInstanceOf[MyVariableSymbol])
+    assertEquals(res.head.name, "s")
+    assertEquals(res.head.kind, SymbolKind.LOCAL)
+    assertEquals(res.head.owner, null)
+    assertEquals(res.head.`type`, model.lookupType("Int64"))
+  }
+
+
+  test("for") {
+    val s =
+      """for i in array
+        |  val x: Int64 = 12
+        |""".stripMargin
+    val l = Tokenizer().lex(s)
+    val p = MyParser()
+    p.setTokens(l.asScala.toVector)
+    val parsingResult = p.matchStatement()
+    val model = MySemanticModel(MyParseResult(null, null), null)
+    val res = model.getLocal(parsingResult, null).map(x => x.asInstanceOf[MyVariableSymbol])
+    assertEquals(res.head.name, "i")
+    assertEquals(res.head.kind, SymbolKind.LOCAL)
+    assertEquals(res.head.owner, null)
+    assertEquals(res.head.definition, parsingResult.slot(1))
+    assertEquals(res.head.`type`, null)
+
+
+    assertEquals(res(1).name, "x")
+    assertEquals(res(1).kind, SymbolKind.LOCAL)
+    assertEquals(res(1).owner, null)
+    assertEquals(res(1).definition, parsingResult.slot(5).slot(0))
+    assertEquals(res(1).`type`, model.lookupType("Int64"))
+  }
+
+  test("is_expression") {
+
+    val s =
+      """(2 + 2) is Int64 x""".stripMargin
+    val l = Tokenizer().lex(s)
+    val p = MyParser()
+    p.setTokens(l.asScala.toVector)
+    val parsingResult = p.matchStatement()
+    val model = MySemanticModel(MyParseResult(null, null), null)
+    val res = model.getLocal(parsingResult, null).map(_.asInstanceOf[MyVariableSymbol])
+    assertEquals(res.head.name, "x")
+    assertEquals(res.head.kind, SymbolKind.LOCAL)
+    assertEquals(res.head.owner, null)
+    assertEquals(res.head.definition, parsingResult.slot(0).slot(3))
+    assertEquals(res.head.`type`, model.lookupType("Boolean"))
+
+  }
   test("Baste test 1") {
     val s = """class Indent2
               |    # Comment established 4 spaces as single identation level
@@ -33,20 +94,71 @@ class LanguageServerTest extends munit.FunSuite {
 
 
     val s =
-      """class Parent3<T <: Int32>
-        |  var x: T
-        |  def bro(x: T): T
+      """class Parent3<T <: Int64> <: X
+        |  var y: X
+        |  def bro(x: T): X
         |    println("bro")
         |    return x
-        |class X <: Parent3<Int> & Int64
+        |interface X <: Parent3<UInt32> & Int64
         |  def pass()
         |    return 4""".stripMargin
-    val l = MyLanguageServer().buildModel(s)
-    val types = l.typeDefinitions().asScala
+    val model = MyLanguageServer().buildModel(s)
+    val types = model.typeDefinitions().asScala.map(_.asInstanceOf[MyTypeSymbol])
+    val parent3 = types.head
+    assertEquals(types.head.name, "Parent3")
+    val parent3BaseTypes = types.head.baseTypesBuffer.map(_.asInstanceOf[MyTypeSymbol])
+    assertEquals(parent3BaseTypes.head.name, "X")
+    assertEquals(parent3BaseTypes.head.isAbstract, true)
+    assertEquals(parent3BaseTypes.head.kind, SymbolKind.INTERFACE)
+    assertEquals(parent3BaseTypes.head.definition, model.root().slot(0).slot(1))
+    assertEquals(parent3BaseTypes.head.typeArgs, ListBuffer.empty)
 
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].`type`, parent3BaseTypes.head)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].kind, SymbolKind.FIELD)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].owner, parent3)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].name, "y")
 
 
     assertEquals(1, 1)
+  }
+
+  test("Generics") {
+
+    val s =
+      """class Parent3<T <: Int64> <: X
+        |  var y: X
+        |  def f(x: T): X
+        |    println("f")
+        |    return x
+        |interface X <: Parent3<Int32> & Int64
+        |  def pass()
+        |    return 4
+        |
+        |class Y<F <: Parent3<Int64> >
+        |   def x()
+        |     return 2""".stripMargin
+    val model = MyLanguageServer().buildModel(s).asInstanceOf[MySemanticModel]
+    val types = model.typeDefinitions().asScala.map(_.asInstanceOf[MyTypeSymbol])
+    val parent3 = types.head
+    val Y = types(2)
+    assertEquals(types.head.name, "Parent3")
+    val parent3BaseTypes = types.head.baseTypesBuffer.map(_.asInstanceOf[MyTypeSymbol])
+    assertEquals(parent3BaseTypes.head.name, "X")
+    assertEquals(parent3BaseTypes.head.isAbstract, true)
+    assertEquals(parent3BaseTypes.head.kind, SymbolKind.INTERFACE)
+    assertEquals(parent3BaseTypes.head.definition, model.root().slot(0).slot(1))
+    assertEquals(parent3BaseTypes.head.typeArgs, ListBuffer.empty)
+
+
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].`type`, parent3BaseTypes.head)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].kind, SymbolKind.FIELD)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].owner, parent3)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].name, "y")
+
+
+    assertEquals(Y.kind, SymbolKind.CLASS)
+    
+
   }
 
 

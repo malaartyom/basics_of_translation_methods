@@ -50,8 +50,10 @@ class MyLanguageServer extends LanguageServer {
       })
 
   def build(node: SyntaxNode): MySyntaxNodeWithSymbol =
+    if (node == null) return null
     MySyntaxNodeWithSymbol(node = node,
-      nodeSymbol = nodes(node), children = node.children.map(build))
+      nodeSymbol = if (nodes.contains(node)) nodes(node) else null
+      , children = node.children.map(build))
 
   override def buildModel(s: String): SemanticModel =
     val p = MyParser().parse(s)

@@ -426,6 +426,25 @@ case class MyParser() extends Parser {
           } else {
             // плохо
           }
+        } else if (state.idx < tokens.length && isKeyword(tokens(state.idx), Keyword.IS)) {
+          node = MySyntaxNode(EXPRESSION_STATEMENT)
+          node.add(IS_EXPRESSION)
+          val child = node.children.head.asInstanceOf[MySyntaxNode]
+          child.add(res)
+          child.add(IS, tokens(state.idx))
+          state.idx += 1
+          if (isExpression(tokens(state.idx))) {
+            child.add(matchExpression())
+          } else {
+            // плохо
+          }
+          if (isIdentifier(tokens(state.idx))) {
+            child.add(IDENTIFIER, tokens(state.idx))
+          } else {
+            child.addFail(1)
+          }
+
+
         } else {
           node = MySyntaxNode(EXPRESSION_STATEMENT)
           node.add(res)

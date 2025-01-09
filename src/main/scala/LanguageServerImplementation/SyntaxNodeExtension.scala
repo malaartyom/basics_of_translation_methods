@@ -37,6 +37,7 @@ object SyntaxNodeExtension {
       case SyntaxKind.IDENTIFIER_NAME_EXPRESSION => SymbolKind.LOCAL
       case SyntaxKind.TYPE_PARAMETER_DEFINITION => SymbolKind.TYPE_PARAMETER
       case SyntaxKind.IDENTIFIER_NAME_EXPRESSION | SyntaxKind.OPTION_NAME_EXPRESSION | SyntaxKind.GENERIC_NAME_EXPRESSION => SymbolKind.CLASS
+      case SyntaxKind.IDENTIFIER => SymbolKind.LOCAL
       case _ => null // TODO
 
 
@@ -84,6 +85,7 @@ object SyntaxNodeExtension {
         case SyntaxKind.PARAMETER_DEFINITION => node.slot(2)
         case SyntaxKind.VARIABLE_DEFINITION => node.slot(3)
         case SyntaxKind.VARIABLE_DEFINITION_STATEMENT => node.slot(0).`type`
+        case SyntaxKind.IDENTIFIER_NAME_EXPRESSION => null
 
     def expression: SyntaxNode =
       node.kind() match
@@ -99,6 +101,11 @@ object SyntaxNodeExtension {
       node.kind() match
         case SyntaxKind.FOR_STATEMENT => node.slot(5).children
         case _ => throw RuntimeException("Not FOR_STATEMENT IN forStatements")
+        
+    def genericParams: ListBuffer[SyntaxNode] =
+      node.kind() match
+        case SyntaxKind.GENERIC_NAME_EXPRESSION => node.slot(2).children
+        case _ => throw RuntimeException("Not a GENERIC_NAME_EXPRESSION")
 
     def functionParameters: ListBuffer[SyntaxNode] =
       node.kind() match
@@ -133,6 +140,8 @@ object SyntaxNodeExtension {
         case SyntaxKind.FUNCTION_DEFINITION => node.slot(0).children.exists(x => x.kind() == Keyword.OVERRIDE)
 //          map(x => x.kind()).contains(Keyword.OVERRIDE)
         case _ => throw RuntimeException("Not a Function in function isOverride")
+        
+        
   }
 
 
