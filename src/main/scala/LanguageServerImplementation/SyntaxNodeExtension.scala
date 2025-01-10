@@ -33,6 +33,7 @@ object SyntaxNodeExtension {
         case Keyword.OBJECT => SymbolKind.OBJECT
       case SyntaxKind.FUNCTION_DEFINITION => SymbolKind.FUNCTION
       case SyntaxKind.PARAMETER_DEFINITION => SymbolKind.PARAMETER
+      case SyntaxKind.VARIABLE_DEFINITION => SymbolKind.LOCAL
       case SyntaxKind.VARIABLE_DEFINITION_STATEMENT => SymbolKind.LOCAL
       case SyntaxKind.IDENTIFIER_NAME_EXPRESSION => SymbolKind.LOCAL
       case SyntaxKind.TYPE_PARAMETER_DEFINITION => SymbolKind.TYPE_PARAMETER
@@ -75,9 +76,13 @@ object SyntaxNodeExtension {
         case SyntaxKind.TYPE_DEFINITION => node.slot(7).children // TODO: Avoid magic const
         case _ => ListBuffer.empty
 
-    def returnType: SyntaxNode =
+    def returnType(owner: SemanticSymbol): SyntaxNode =
       node.kind() match
-        case SyntaxKind.FUNCTION_DEFINITION => node.slot(7) // TODO:
+        case SyntaxKind.FUNCTION_DEFINITION =>
+          node.name match
+            case "this" => owner.definition()
+            case _ => node.slot(7)
+          
         case _ =>  throw RuntimeException("Cannot get returnType at non-function node")
 
     def `type`: SyntaxNode =
@@ -86,6 +91,11 @@ object SyntaxNodeExtension {
         case SyntaxKind.VARIABLE_DEFINITION => node.slot(3)
         case SyntaxKind.VARIABLE_DEFINITION_STATEMENT => node.slot(0).`type`
         case SyntaxKind.IDENTIFIER_NAME_EXPRESSION => null
+        
+     def variable: SyntaxNode =
+       node.kind() match
+         case SyntaxKind.VARIABLE_DEFINITION_STATEMENT => node.slot(0)
+         case _ => throw RuntimeException("Not a variable def statement")
 
     def expression: SyntaxNode =
       node.kind() match

@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters.*
 import SyntaxNodeExtension.*
 
 class MyLanguageServer extends LanguageServer {
-  val nodes: mutable.HashMap[SyntaxNode, SemanticSymbol] = mutable.HashMap()
+  var nodes: mutable.HashMap[SyntaxNode, SemanticSymbol] = mutable.HashMap()
 
 
   def fillVariable(value: java.util.List[? <: VariableSymbol]): Unit =
@@ -37,8 +37,12 @@ class MyLanguageServer extends LanguageServer {
   def fillTypeArgsNodes(typeArguments: java.util.List[? <: TypeLikeSymbol]): Unit =
     typeArguments.asScala.foreach(x => {
       nodes += (x.definition() -> x)
-//      x match
-//        case p: TypeParameterSymbol => p.bounds() ???
+
+    })
+
+  def fillParentNodes(parents: Seq[? <: TypeSymbol]): Unit =
+    parents.foreach(x => {
+      nodes += (x.definition() -> x)
     })
 
   def fillNodes(typeDefinitions: Seq[? <: TypeSymbol]): Unit =
@@ -46,19 +50,30 @@ class MyLanguageServer extends LanguageServer {
       { nodes += (x.definition() -> x)
         fillMemeberNodes(x.members())
         fillTypeArgsNodes(x.typeArguments())
-        fillNodes(x.baseTypes().asScala.toSeq)
+        fillParentNodes(x.baseTypes().asScala.toSeq)
       })
 
-  def build(node: SyntaxNode): MySyntaxNodeWithSymbol =
+  def build(node: SyntaxNode): MySyntaxNode = {
     if (node == null) return null
-    MySyntaxNodeWithSymbol(node = node,
-      nodeSymbol = if (nodes.contains(node)) nodes(node) else null
-      , children = node.children.map(build))
+    val symbol = if (nodes.contains(node)) nodes(node) else null
+    node match
+      case my: MySyntaxNode =>
+        my.sym = symbol
+        my.children.map(build)
+        my
+      case _ => MySyntaxNode(var1 = node.kind(), var2 = node.token(), sym = symbol, children = node.children.map(build))
+  }
+
+//  MySyntaxNodeWithSymbol(node = node,
+//    nodeSymbol = if (nodes.contains(node)) nodes(node) else null
+//    , children = node.children.map(build))
 
   override def buildModel(s: String): SemanticModel =
+    nodes = mutable.HashMap()
     val p = MyParser().parse(s)
     val semanticModel = MySemanticModel(p, p.root())
     fillNodes(semanticModel.typeDefinitions().asScala.toSeq)
-    println(nodes)
-    MySemanticModel(p, build(p.root()))
+//    println(nodes)
+    semanticModel.rootNode = build(p.root())
+    return semanticModel
 }  

@@ -996,6 +996,40 @@ class ExpressionTest extends munit.FunSuite {
     assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
   }
 
+  test("12 * 123 + 234") {
+    //              3      8
+    //           12 + 123 != 234
+    //             2     3
+    val code = "12 * 123 + 234"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = Parsing.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression()
+    assertEquals(result.kind, SyntaxKind.ADD_EXPRESSION)
+    assertEquals(result.slotCount(), 3)
+    assertEquals(result.slot(0).kind(), SyntaxKind.MULTIPLY_EXPRESSION)
+    assertEquals(result.slot(1).kind(), Symbol.PLUS)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+  }
+
+  test("12 * 123 != 234") {
+    //              3      8
+    //           12 + 123 != 234
+    //             2     3
+    val code = "12 * 123 != 234"
+    val t = Tokenizer()
+    val tokens = t.lex(code)
+    val p = Parsing.MyParser();
+    p.setTokens(tokens.asScala.toVector)
+    val result = p.matchExpression()
+    assertEquals(result.kind, SyntaxKind.NOT_EQUALS_EXPRESSION)
+    assertEquals(result.slotCount(), 3)
+    assertEquals(result.slot(0).kind(), SyntaxKind.MULTIPLY_EXPRESSION)
+    assertEquals(result.slot(1).kind(), Symbol.EXCLAMATION_EQUALS)
+    assertEquals(result.slot(2).kind(), SyntaxKind.INTEGER_LITERAL_EXPRESSION)
+  }
+
   test("0") {
     val t = Tokenizer()
     val s = """val _range: Range"""

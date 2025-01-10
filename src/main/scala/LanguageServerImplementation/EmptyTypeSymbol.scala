@@ -17,7 +17,7 @@ case class EmptyTypeSymbol(name: String) extends TypeSymbol with Constructable {
 
   override def originalDefinition(): TypeSymbol = this
 
-  override def construct(list: util.List[_ <: TypeLikeSymbol]): TypeSymbol = super.constr(list, ListBuffer.empty, null, this)
+  override def construct(list: util.List[_ <: TypeLikeSymbol]): TypeSymbol = ???
 
   override def members(): util.List[_ <: MemberSymbol] = Vector.empty.toList.asJava
 

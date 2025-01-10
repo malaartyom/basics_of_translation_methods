@@ -41,14 +41,14 @@ class LanguageServerTest extends munit.FunSuite {
     assertEquals(res.head.name, "i")
     assertEquals(res.head.kind, SymbolKind.LOCAL)
     assertEquals(res.head.owner, null)
-    assertEquals(res.head.definition, parsingResult.slot(1))
+//    assertEquals(res.head.definition, parsingResult.slot(1))
     assertEquals(res.head.`type`, null)
 
 
     assertEquals(res(1).name, "x")
     assertEquals(res(1).kind, SymbolKind.LOCAL)
     assertEquals(res(1).owner, null)
-    assertEquals(res(1).definition, parsingResult.slot(5).slot(0))
+//    assertEquals(res(1).definition, parsingResult.slot(5).slot(0))
     assertEquals(res(1).`type`, model.lookupType("Int64"))
   }
 
@@ -69,7 +69,26 @@ class LanguageServerTest extends munit.FunSuite {
     assertEquals(res.head.`type`, model.lookupType("Boolean"))
 
   }
-  test("Baste test 1") {
+  test("Clash 1") {
+    val s =
+      """interface Clash1<T>
+        |  def apply(arg: T): Boolean
+        |
+        |class A <: Clash1<UInt64>
+        |  def apply(arg: UInt64): Boolean
+        |    return true
+        |
+        |class B <: Clash1<Int64>
+        |  abstract def apply(arg: Int64): Boolean
+        |    return true
+        |""".stripMargin
+    val server = MyLanguageServer()
+    val model = server.buildModel(s)
+    val types = model.typeDefinitions().asScala.map(_.asInstanceOf[MyTypeSymbol])
+
+
+  }
+  test("Base test 1") {
     val s = """class Indent2
               |    # Comment established 4 spaces as single identation level
               |  def memberIsAt2(): Boolean

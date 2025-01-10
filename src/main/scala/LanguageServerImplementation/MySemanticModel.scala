@@ -1,18 +1,15 @@
 package LanguageServerImplementation
 
-import ParserImplementation.Parsing.{MyParseResult, MySyntaxNode}
-import syspro.tm.lexer.Keyword
+import LanguageServerImplementation.SyntaxNodeExtension.*
+import ParserImplementation.Parsing.MyParseResult
 import syspro.tm.parser.{Diagnostic, SyntaxKind, SyntaxNode, TextSpan}
-import syspro.tm.symbols.{FunctionSymbol, MemberSymbol, SemanticModel, SemanticSymbol, SymbolKind, TypeLikeSymbol, TypeSymbol, VariableSymbol}
-
-import scala.jdk.CollectionConverters.*
-import java.util
-import scala.collection.mutable.ListBuffer
-import SyntaxNodeExtension.*
+import syspro.tm.symbols.*
 import syspro.tm.{lexer, parser}
-import SyntaxNodeExtension.isNameExpr
 
+import java.util
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.*
 
 
 class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
@@ -27,8 +24,22 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     "Int64" -> BaseTypeSymbol("Int64"),
     "UInt32" -> BaseTypeSymbol("UInt32"),
     "UInt64" -> BaseTypeSymbol("UInt64"),
-    "Rune" -> BaseTypeSymbol("Rune")
+    "Rune" -> BaseTypeSymbol("Rune"),
+    "Iterable" -> null,
+    "PrimitiveIntrinsics" -> null,
+    "System" -> null,
+    "Iterator" -> null,
+    "Iterable" -> null,
+    "RangeIterator" -> null,
+    "Range" -> null,
+    "ArrayIterator" -> null,
+    "Array" -> null,
+    "ArrayListIterator" -> null,
+    "ArrayList" -> null,
+    "String" -> null
   )
+
+  var generics: mutable.HashMap[String, TypeParameterSymbol] = mutable.HashMap()
 
 
   override def root(): SyntaxNode = rootNode
@@ -52,55 +63,62 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     list.asJava
 
   def checkTypeDefinition(node: SyntaxNode): MyTypeSymbol =
-    types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
+    if (!types.contains(node.name))
+      types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
     val symbol = MyTypeSymbol(
       kind = node.symbolKind,
       name = node.name,
-      baseTypesBuffer = getParents(node),
       definition = node)
     symbol.typeArgs = getTypeArgs(node, symbol)
+    symbol.baseTypesBuffer = getParents(node)
     symbol.memberSymbols = getMembers(node, symbol)
     symbol.isAbstract = checkAbstractness(node, symbol)
     types(symbol.name) = symbol
     symbol
 
-  def getParents(node: SyntaxNode): ListBuffer[TypeSymbol] = node.parents.map(getNameExpression)
+  def getParents(node: SyntaxNode): ListBuffer[TypeSymbol] = node.parents.map(x => getNameExpression(x).asInstanceOf[TypeSymbol]) // TODO: Check
 
   def getTypeArgs(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[TypeLikeSymbol] = node.typeArgs.map(x => getTypeParameterDefinition(x, owner))
 
   def getTypeParameterDefinition(node: SyntaxNode, owner: SemanticSymbol): TypeLikeSymbol =
-    types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
-    MyTypeParameterSymbol(
+    val param = MyTypeParameterSymbol(
       typeParamBounds = node.parents.map(getNameExpression), // TODO: ???? can be unexpected behavior
       owner = owner,
       kind = node.symbolKind,
       name = node.name,
       definition = node)
+    if (generics.contains(node.name)) {
+      generics(node.name) = param
+    }
+    generics += (node.name -> param)
+    param
 
 
 
-  def getNameExpression(node: SyntaxNode): TypeSymbol =
-    // TODO: Maybe problem if func called not from get parents
-    // <: SomeClass & Parent1 & ?Parent2 & List<Int> & Parent3<Some>
+
+  def getNameExpression(node: SyntaxNode): TypeLikeSymbol =
     if (node == null) return null
     node.kind() match
       case SyntaxKind.IDENTIFIER_NAME_EXPRESSION |
            SyntaxKind.GENERIC_NAME_EXPRESSION |
            SyntaxKind.OPTION_NAME_EXPRESSION =>
+        if (generics.contains(node.name)) return generics(node.name)
         if (!types.contains(node.name) && code == 0) {
           types += (node.name -> EmptyTypeSymbol(node.name))
           println("Type could be not declared below! Please check this!")
           // TODO: Check it in the end
-        } else if ((!types.contains(node.name) && code == 2) || types(node.name).isInstanceOf[EmptyTypeSymbol] && code == 2) {
+        } else if ((!types.contains(node.name) && code == 2) || (types.contains(node.name) && types(node.name).isInstanceOf[EmptyTypeSymbol] && code == 2)) {
           throw RuntimeException(s"No such type declared in code ${node.name}")
         }
-        else if (code == 1) {
+        else if (code == 2) {
           node.kind() match
             case SyntaxKind.GENERIC_NAME_EXPRESSION =>
-              types(node.name).construct(node.genericParams.map(getNameExpression).asJava)
-            case _ => types(node.name)
+              types(node.name).asInstanceOf[MyTypeSymbol].setEnvironment(types)
+              return types(node.name).construct(node.genericParams.map(getNameExpression).asJava)
+            case _ => return types(node.name)
         }
         types(node.name)
+      case SyntaxKind.TYPE_DEFINITION => types(node.name)
       case _ => throw RuntimeException(s"Not a name expression in getNameExpression $node")
 
   def getMembers(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[MemberSymbol] = node.definitions.map(x => getDefinition(x, owner))
@@ -113,12 +131,12 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
           isVirtual = node.isVirtual(owner),
           isAbstract = node.isAbstract(owner),
           isOverride = node.isOverride,
-          returnType = getNameExpression(node.returnType),
+          returnType = getNameExpression(node.returnType(owner)),
           owner = owner,
           kind = node.symbolKind,
           name = node.name,
           definition = node)
-        functionSymbol.functionParameters = getFunctionParametrs(node, functionSymbol)
+        functionSymbol.functionParameters = getFunctionParameters(node, functionSymbol)
         functionSymbol.functionLocals = getFunctionLocals(node, functionSymbol)
         functionSymbol
       case SyntaxKind.VARIABLE_DEFINITION => MyVariableSymbol(
@@ -130,7 +148,7 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
       )
       case _ => throw RuntimeException("Not a variable or a function!")
 
-  def getFunctionParametrs(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[VariableSymbol] = node.functionParameters.map(x => getParameterDefenition(x, owner))
+  def getFunctionParameters(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[VariableSymbol] = node.functionParameters.map(x => getParameterDefenition(x, owner))
 
   def getFunctionLocals(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[VariableSymbol] = node.functionStatements.filter(x => x != null).flatMap(x => getLocal(x, owner))
 
@@ -139,23 +157,18 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     node.kind() match
       case SyntaxKind.VARIABLE_DEFINITION_STATEMENT =>
         result.append(MyVariableSymbol(
-          `type` = getNameExpression(node.`type`),
+          `type` = getNameExpression(node.variable.`type`),
           owner = owner,
-          kind = node.symbolKind,
-          name = node.name,
-          definition = node))
+          kind = node.variable.symbolKind,
+          name = node.variable.name,
+          definition = node.variable))
       case SyntaxKind.FOR_STATEMENT =>
-//        types += (node.forLocal.name -> MyTypeSymbol(
-//          kind = SymbolKind.LOCAL,
-//          name = node.forLocal.name,
-//          definition = node.forLocal
-//        ))
         result.append(MyVariableSymbol(
           `type` = getNameExpression(node.forLocal.`type`),
           owner = owner,
           kind = node.forLocal.symbolKind,
           name = node.forLocal.name,
-          definition = node.forLocal
+          definition = node
         ))
         result.addAll(node.forStatements.flatMap(x => getLocal(x, owner)))
       case SyntaxKind.EXPRESSION_STATEMENT if node.expression.kind() == SyntaxKind.IS_EXPRESSION =>

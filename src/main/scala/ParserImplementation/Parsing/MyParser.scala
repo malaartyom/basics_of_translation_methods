@@ -679,7 +679,7 @@ case class MyParser() extends Parser {
           case symbol: SymbolToken => priority(symbol.symbol)
           case keyword: KeywordToken => priority(keyword.keyword)
       }
-      if (stackPriority <= currentPriority || opStack.isEmpty) {
+      if (stackPriority >= currentPriority || opStack.isEmpty) {
         tokens(state.idx) match
           case symbol: SymbolToken => opStack.push(symbol)
           case keyword: KeywordToken => opStack.push(keyword)
