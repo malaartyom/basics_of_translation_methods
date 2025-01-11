@@ -2,12 +2,13 @@ package LanguageServerImplementation
 
 import syspro.tm.lexer.Keyword
 import syspro.tm.parser.{SyntaxKind, SyntaxNode}
-import syspro.tm.symbols.{SemanticSymbol, SymbolKind}
+import syspro.tm.symbols.{SemanticSymbol, SymbolKind, TypeParameterSymbol, TypeSymbol}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
-object SyntaxNodeExtension {
+object Utils {
+
   val OPTION_NAME_EXPRESSION_NAME = 1
   private val TYPE_DEF_PARENTS = 5
   private val TYPE_BOUND_LIST = 1

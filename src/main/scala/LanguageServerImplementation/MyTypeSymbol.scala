@@ -1,17 +1,13 @@
 package LanguageServerImplementation
 
-import ParserImplementation.Parsing.{MyParseResult, MySyntaxNode}
-import syspro.tm.lexer.IdentifierToken
-import syspro.tm.parser.{SyntaxKind, SyntaxNode}
+import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{MemberSymbol, SymbolKind, TypeLikeSymbol, TypeSymbol}
 
-import scala.jdk.CollectionConverters.*
 import java.util
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
-import SyntaxNodeExtension.*
-
-import scala.collection.mutable
+import Context.TypeEnvironment
 
 case class MyTypeSymbol(
                     var typeArgs: ListBuffer[TypeLikeSymbol] = ListBuffer.empty,
@@ -39,7 +35,7 @@ case class MyTypeSymbol(
 
   override def toString: String = name
 
-  def setEnvironment(environment: TypeEnvironment) = env = environment 
+  def setEnvironment(environment: TypeEnvironment): Unit = env = environment 
 
   
 }

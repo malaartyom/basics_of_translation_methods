@@ -1,6 +1,7 @@
 package LanguageServerImplementation
 
-import LanguageServerImplementation.SyntaxNodeExtension.*
+import LanguageServerImplementation.Context.TypeEnvironment
+import LanguageServerImplementation.Utils.*
 import ParserImplementation.Parsing.MyParseResult
 import syspro.tm.parser.{Diagnostic, SyntaxKind, SyntaxNode, TextSpan}
 import syspro.tm.symbols.*
@@ -11,36 +12,19 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
 
-
+object MySemanticModel {
+  val emptyModel = MySemanticModel(MyParseResult(null, null), null)
+}
 class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
   extends SemanticModel {
 
   var code: Int = 0
   var ranges: ListBuffer[TextSpan] = parseResult.invalid_ranges
-  var diagnostic: ListBuffer[Diagnostic] = parseResult.diagnostic
-  var types: mutable.HashMap[String, TypeSymbol] = mutable.HashMap(
-    "Boolean" -> BaseTypeSymbol("Boolean"),
-    "Int32" -> BaseTypeSymbol("Int32"),
-    "Int64" -> BaseTypeSymbol("Int64"),
-    "UInt32" -> BaseTypeSymbol("UInt32"),
-    "UInt64" -> BaseTypeSymbol("UInt64"),
-    "Rune" -> BaseTypeSymbol("Rune"),
-    "Iterable" -> null,
-    "PrimitiveIntrinsics" -> null,
-    "System" -> null,
-    "Iterator" -> null,
-    "Iterable" -> null,
-    "RangeIterator" -> null,
-    "Range" -> null,
-    "ArrayIterator" -> null,
-    "Array" -> null,
-    "ArrayListIterator" -> null,
-    "ArrayList" -> null,
-    "String" -> null
-  )
+  var diagnostic: ListBuffer[Diagnostic] = ListBuffer(parseResult.diagnostics().asScala.toSeq*)
+  var context: Context = Context()
 
-  var generics: mutable.HashMap[String, TypeParameterSymbol] = mutable.HashMap()
 
+  def update(context: Context): Unit = this.context += context
 
   override def root(): SyntaxNode = rootNode
 
@@ -48,7 +32,7 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
 
   override def diagnostics(): util.Collection[Diagnostic] = parseResult.diagnostics()
 
-  override def lookupType(s: String): TypeSymbol = types(s)
+  override def lookupType(s: String): TypeSymbol = context.getClass(s)
 
   override def typeDefinitions(): util.List[_ <: TypeSymbol] =
     val x = this.preTypeDefinitions()
@@ -63,8 +47,9 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     list.asJava
 
   def checkTypeDefinition(node: SyntaxNode): MyTypeSymbol =
-    if (!types.contains(node.name))
-      types += (node.name -> MyTypeSymbol(name = node.name, definition = node, kind = null))
+    if (!context.containsClass(node.name)) {
+      context.add(node.name, MyTypeSymbol(name = node.name, definition = node, kind = null))
+    }
     val symbol = MyTypeSymbol(
       kind = node.symbolKind,
       name = node.name,
@@ -73,25 +58,25 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     symbol.baseTypesBuffer = getParents(node)
     symbol.memberSymbols = getMembers(node, symbol)
     symbol.isAbstract = checkAbstractness(node, symbol)
-    types(symbol.name) = symbol
+    context(symbol.name) = symbol
+    context.pop()
     symbol
 
   def getParents(node: SyntaxNode): ListBuffer[TypeSymbol] = node.parents.map(x => getNameExpression(x).asInstanceOf[TypeSymbol]) // TODO: Check
 
-  def getTypeArgs(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[TypeLikeSymbol] = node.typeArgs.map(x => getTypeParameterDefinition(x, owner))
+  def getTypeArgs(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[TypeLikeSymbol] =
+    context.push()
+    node.typeArgs.map(x => getTypeParameterDefinition(x, owner))
 
   def getTypeParameterDefinition(node: SyntaxNode, owner: SemanticSymbol): TypeLikeSymbol =
     val param = MyTypeParameterSymbol(
-      typeParamBounds = node.parents.map(getNameExpression), // TODO: ???? can be unexpected behavior
       owner = owner,
       kind = node.symbolKind,
       name = node.name,
       definition = node)
-    if (generics.contains(node.name)) {
-      generics(node.name) = param
-    }
-    generics += (node.name -> param)
-    param
+    context(node.name) = param
+    param.typeParamBounds = node.parents.map(getNameExpression)
+    context.getParameter(node.name)
 
 
 
@@ -102,23 +87,24 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
       case SyntaxKind.IDENTIFIER_NAME_EXPRESSION |
            SyntaxKind.GENERIC_NAME_EXPRESSION |
            SyntaxKind.OPTION_NAME_EXPRESSION =>
-        if (generics.contains(node.name)) return generics(node.name)
-        if (!types.contains(node.name) && code == 0) {
-          types += (node.name -> EmptyTypeSymbol(node.name))
+        if (context.containsParam(node.name)) return context.getParameter(node.name)
+        if (!context.containsClass(node.name) && code == 0) {
+          context.add(node.name, EmptyTypeSymbol(node.name))
           println("Type could be not declared below! Please check this!")
           // TODO: Check it in the end
-        } else if ((!types.contains(node.name) && code == 2) || (types.contains(node.name) && types(node.name).isInstanceOf[EmptyTypeSymbol] && code == 2)) {
-          throw RuntimeException(s"No such type declared in code ${node.name}")
+        } else if ((!context.containsClass(node.name) && code == 2) || (context.containsEmpty(node.name) && code == 2)) {
+          parseResult.addDiagnostic(node.fullSpan(), 20, s"name: ${node.name}, node.kind: ${node.kind}")
+          context.add(node.name, EmptyTypeSymbol(node.name))
         }
         else if (code == 2) {
           node.kind() match
-            case SyntaxKind.GENERIC_NAME_EXPRESSION =>
-              types(node.name).asInstanceOf[MyTypeSymbol].setEnvironment(types)
-              return types(node.name).construct(node.genericParams.map(getNameExpression).asJava)
-            case _ => return types(node.name)
+            case SyntaxKind.GENERIC_NAME_EXPRESSION if context.getClass(node.name) != null =>
+              context.setEnvironment(node.name)
+              return context.getClass(node.name).construct(node.genericParams.map(getNameExpression).asJava)
+            case _ => return context.getClass(node.name)
         }
-        types(node.name)
-      case SyntaxKind.TYPE_DEFINITION => types(node.name)
+        context.getClass(node.name)
+      case SyntaxKind.TYPE_DEFINITION => context.getClass(node.name)
       case _ => throw RuntimeException(s"Not a name expression in getNameExpression $node")
 
   def getMembers(node: SyntaxNode, owner: SemanticSymbol): ListBuffer[MemberSymbol] = node.definitions.map(x => getDefinition(x, owner))
@@ -173,7 +159,7 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
         result.addAll(node.forStatements.flatMap(x => getLocal(x, owner)))
       case SyntaxKind.EXPRESSION_STATEMENT if node.expression.kind() == SyntaxKind.IS_EXPRESSION =>
         result.append(MyVariableSymbol(
-          `type` = types("Boolean"),
+          `type` = context.getClass("Boolean"),
           owner = owner,
           kind = node.expression.slot(3).symbolKind,
           name = node.expression.slot(3).name,

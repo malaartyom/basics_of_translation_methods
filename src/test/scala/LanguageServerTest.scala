@@ -329,3 +329,84 @@ class LanguageServerTest extends munit.FunSuite {
 
   }
 }
+
+
+class ComplicatedTest extends munit.FunSuite {
+
+  test("My") {
+    val code =
+      """interface Iterator<T>
+        |    def hasNext(): Boolean
+        |    def next(): T
+        |interface Iterable
+        |    def iterator(i: String)""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+  }
+
+  test("Parametrize undefined") {
+    val code =
+      """interface Iterator<T>
+        |    def hasNext(): String<T>
+        |    def next(): T
+        |class A <: Iterator<T>
+        |    val i: String<T>
+        |    def hasNext(): String<T>""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+  }
+
+  test("A lot parameters") {
+    val code =
+      """interface Iterator<T>
+        |    def hasNext(): String<T>
+        |    def next(): T
+        |class A<T> <: Iterator<T>
+        |    val i: Iterator<T>
+        |    def hasNext(): String<T>""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+  }
+
+  test("Type bounds") {
+    val code =
+      """class B<T>
+        |class F<T>
+        |interface Iterator<T>
+        |    def hasNext(): String<T>
+        |    def next(): T
+        |class A<D, T <: B<T> & F<T>>
+        |    val i: Iterator<String<T>>
+        |    def hasNext(): String<T>""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+    result.diagnostics().forEach(d => println(d.errorCode()))
+    result.lookupType("A").typeArguments().forEach(a => println(a.asInstanceOf[MyTypeParameterSymbol].bounds))
+  }
+
+  test("Type bounds undefined") {
+    val code =
+      """class A<T>
+        |    val i: Iterator<String<T>>""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+    result.diagnostics().forEach(d => println(d.errorCode()))
+  }
+
+  test("Type bounds with Interface") {
+    val code =
+      """interface B<T>
+        |object F<T>
+        |interface Iterator<T>
+        |    def hasNext(): String<T>
+        |    def next(): T
+        |class A<D, T <: B<T> & F<T>>
+        |    val i: Iterator<String<T>>
+        |    def hasNext(): String<T>""".stripMargin
+    val result = MyLanguageServer().buildModel(code)
+    println(result.typeDefinitions())
+    result.diagnostics().forEach(d => println(d.errorCode()))
+    result.lookupType("A").typeArguments().forEach(a => println(a.asInstanceOf[MyTypeParameterSymbol].bounds))
+  }
+
+}

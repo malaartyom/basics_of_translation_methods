@@ -30,8 +30,8 @@ class MyParseResult(rootKind: AnySyntaxKind, rootToken: Token = null) extends Pa
   
   def addInvalidRange(textSpan: TextSpan): ListBuffer[TextSpan] = invalid_ranges.append(textSpan)
   
-  def addDiagnostic(textSpan: TextSpan, code: Int) =
-    val diag = Diagnostic(DiagnosticInfo(MyErrorCode(code), null), textSpan, List[Diagnostic]().asJava)  
+  def addDiagnostic(textSpan: TextSpan, code: Int, additionalInformation: String = "") =
+    val diag = Diagnostic(DiagnosticInfo(MyErrorCode(code, information = additionalInformation), null), textSpan, List[Diagnostic]().asJava)  
     diagnostic.append(diag)
   
 }

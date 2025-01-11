@@ -11,7 +11,7 @@ import syspro.tm.lexer.Keyword.*
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
-import SyntaxNodeExtension.*
+import Utils.*
 
 class MyLanguageServer extends LanguageServer {
   var nodes: mutable.HashMap[SyntaxNode, SemanticSymbol] = mutable.HashMap()

@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
 
 case class MyTypeParameterSymbol(
-                                  typeParamBounds: ListBuffer[TypeLikeSymbol] = ListBuffer.empty,
+                                  var typeParamBounds: ListBuffer[TypeLikeSymbol] = ListBuffer.empty,
                                   owner: SemanticSymbol = null,
                                   kind: SymbolKind = null,
                                   name: String,
