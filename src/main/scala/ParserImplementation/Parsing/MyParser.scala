@@ -289,9 +289,6 @@ case class MyParser() extends Parser {
           case ABSTRACT | VIRTUAL | OVERRIDE | NATIVE => node = MySyntaxNode(keyword.keyword, tokens(state.idx));
       case _ =>
     state.idx += 1
-    if (node == null) {
-      node = MySyntaxNode(BAD, tokens(state.idx))
-    }
     node
   }
 
@@ -362,9 +359,6 @@ case class MyParser() extends Parser {
         case _ => node = MySyntaxNode(BAD, tokens(state.idx))
       case _ => parseResult.addInvalidRange(tokens(state.idx).fullSpan()); node = MySyntaxNode(BAD, tokens(state.idx)) // TODO: Think about it
     state.idx += 1
-    if (node == null) {
-      node = MySyntaxNode(BAD, tokens(state.idx))
-    }
     node
   }
 
@@ -448,9 +442,6 @@ case class MyParser() extends Parser {
         } else {
           node = MySyntaxNode(EXPRESSION_STATEMENT)
           node.add(res)
-        }
-        if (node == null) {
-          node = MySyntaxNode(BAD, tokens(state.idx))
         }
         node
       case expression if isExpression(expression) =>
@@ -733,9 +724,6 @@ case class MyParser() extends Parser {
           case EXCLAMATION => node = MySyntaxNode(LOGICAL_NOT_EXPRESSION)
         node.add(symbol.symbol, tokens(state.idx))
       case _ => println(s"Not a symbol but matchUnary called! ${tokens(state.idx)}")
-    if (node == null) {
-      node = MySyntaxNode(BAD, tokens(state.idx))
-    }
     state.idx += 1
     node
   }
@@ -870,9 +858,6 @@ case class MyParser() extends Parser {
           case CLOSE_PAREN => return node
         }
       first = false
-    if (node == null) {
-      node = MySyntaxNode(BAD, tokens(state.idx))
-    }
     node
   }
 
