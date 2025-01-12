@@ -1,10 +1,11 @@
-package LanguageServerImplementation
+package LanguageServerImplementation.Symbols
+
 import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{MemberSymbol, SymbolKind, TypeLikeSymbol, TypeSymbol}
 
-import scala.jdk.CollectionConverters.*
 import java.util
 import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters.*
 
 class BaseTypeSymbol(
                       val typeName: String,
@@ -15,9 +16,9 @@ class BaseTypeSymbol(
 
   override def isAbstract: Boolean = false
 
-  override def baseTypes(): util.List[_ <: TypeSymbol] = parents.asJava
+  override def baseTypes(): util.List[? <: TypeSymbol] = parents.asJava
 
-  override def typeArguments(): util.List[_ <: TypeLikeSymbol] =
+  override def typeArguments(): util.List[? <: TypeLikeSymbol] =
     if (generics.isEmpty) return Vector.empty.toList.asJava
     generics.map(s => {
       MyTypeParameterSymbol(
@@ -30,9 +31,9 @@ class BaseTypeSymbol(
 
   override def originalDefinition(): TypeSymbol = this
 
-  override def construct(list: util.List[_ <: TypeLikeSymbol]): TypeSymbol = ???
+  override def construct(list: util.List[? <: TypeLikeSymbol]): TypeSymbol = ???
 
-  override def members(): util.List[_ <: MemberSymbol] = Vector.empty.toList.asJava
+  override def members(): util.List[? <: MemberSymbol] = Vector.empty.toList.asJava
 
   override def kind(): SymbolKind = symbolKind
 

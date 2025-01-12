@@ -1,4 +1,5 @@
-import LanguageServerImplementation.{MyLanguageServer, MySemanticModel, MyTypeParameterSymbol, MyTypeSymbol, MyVariableSymbol}
+import LanguageServerImplementation.Symbols.{MyTypeParameterSymbol, MyTypeSymbol, MyVariableSymbol}
+import LanguageServerImplementation.{MyLanguageServer, MySemanticModel}
 import LexerImplementation.Tokenizer
 import ParserImplementation.Parsing
 import ParserImplementation.Parsing.{MyParseResult, MyParser}
@@ -118,7 +119,7 @@ class LanguageServerTest extends munit.FunSuite {
         |  def bro(x: T): X
         |    println("bro")
         |    return x
-        |interface X <: Parent3<UInt32> & Int64
+        |interface X <: Parent3<Int> & Int64
         |  def pass()
         |    return 4""".stripMargin
     val model = MyLanguageServer().buildModel(s)
@@ -315,6 +316,36 @@ class LanguageServerTest extends munit.FunSuite {
 
     types
 
+  }
+
+  test("String") {
+    val s =
+      """class Parent3<T <: Int64> <: X
+        |  var y: X
+        |  def bro(x: T): String
+        |    println("bro")
+        |    return x
+        |interface X <: Parent3<Int> & String
+        |  def pass()
+        |    return 4""".stripMargin
+    val model = MyLanguageServer().buildModel(s)
+    val types = model.typeDefinitions().asScala.map(_.asInstanceOf[MyTypeSymbol])
+    val parent3 = types.head
+    assertEquals(types.head.name, "Parent3")
+    val parent3BaseTypes = types.head.baseTypesBuffer.map(_.asInstanceOf[MyTypeSymbol])
+    assertEquals(parent3BaseTypes.head.name, "X")
+    assertEquals(parent3BaseTypes.head.isAbstract, true)
+    assertEquals(parent3BaseTypes.head.kind, SymbolKind.INTERFACE)
+    assertEquals(parent3BaseTypes.head.definition, model.root().slot(0).slot(1))
+    assertEquals(parent3BaseTypes.head.typeArgs, ListBuffer.empty)
+
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].`type`, parent3BaseTypes.head)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].kind, SymbolKind.FIELD)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].owner, parent3)
+    assertEquals(parent3.memberSymbols.head.asInstanceOf[MyVariableSymbol].name, "y")
+
+
+    println(model.diagnostics())
   }
 
   test("getDefinition 1") {

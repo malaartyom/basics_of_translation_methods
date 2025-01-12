@@ -101,6 +101,7 @@ object Utils {
     def expression: SyntaxNode =
       node.kind() match
         case SyntaxKind.EXPRESSION_STATEMENT => node.slot(0)
+        case SyntaxKind.VARIABLE_DEFINITION => node.slot(5)
         case _ => throw RuntimeException("Not an expression statement")
 
     def forLocal: SyntaxNode =
@@ -117,6 +118,11 @@ object Utils {
       node.kind() match
         case SyntaxKind.GENERIC_NAME_EXPRESSION => node.slot(2).children
         case _ => throw RuntimeException("Not a GENERIC_NAME_EXPRESSION")
+
+     def expressionIsIdentifier: SyntaxNode =
+       node.kind() match
+         case SyntaxKind.IS_EXPRESSION => node.slot(3)
+         case k => throw RuntimeException(s"Not sn IS_EXPRESSION $k")
 
     def functionParameters: ListBuffer[SyntaxNode] =
       node.kind() match

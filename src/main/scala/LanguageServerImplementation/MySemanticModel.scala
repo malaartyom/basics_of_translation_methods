@@ -1,6 +1,8 @@
 package LanguageServerImplementation
 
 import LanguageServerImplementation.Context.TypeEnvironment
+import LanguageServerImplementation.LaunchType.{SECOND, ZERO}
+import LanguageServerImplementation.Symbols.{MyFunctionSymbol, MyTypeParameterSymbol, MyTypeSymbol, MyVariableSymbol}
 import LanguageServerImplementation.Utils.*
 import ParserImplementation.Parsing.MyParseResult
 import syspro.tm.parser.{Diagnostic, SyntaxKind, SyntaxNode, TextSpan}
@@ -18,9 +20,9 @@ object MySemanticModel {
 class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
   extends SemanticModel {
 
-  var code: Int = 0
+  var launch: LaunchType = ZERO
   var ranges: ListBuffer[TextSpan] = parseResult.invalid_ranges
-  var diagnostic: ListBuffer[Diagnostic] = ListBuffer(parseResult.diagnostics().asScala.toSeq*)
+  var diagnostic: ListBuffer[Diagnostic] = ListBuffer(parseResult.diagnostics().asScala.toSeq *)
   var context: Context = Context()
 
 
@@ -34,12 +36,12 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
 
   override def lookupType(s: String): TypeSymbol = context.getClass(s)
 
-  override def typeDefinitions(): util.List[_ <: TypeSymbol] =
+  override def typeDefinitions(): util.List[? <: TypeSymbol] =
     val x = this.preTypeDefinitions()
-    this.code = 2
+    launch = SECOND
     this.preTypeDefinitions()
 
-  def preTypeDefinitions(): util.List[_ <: TypeSymbol] =
+  def preTypeDefinitions(): util.List[? <: TypeSymbol] =
     val list = ListBuffer[MyTypeSymbol]()
     for (i <- 0 until rootNode.slot(0).slotCount()) {
       list.append(checkTypeDefinition(rootNode.slot(0).slot(i)))
@@ -79,8 +81,6 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
     context.getParameter(node.name)
 
 
-
-
   def getNameExpression(node: SyntaxNode): TypeLikeSymbol =
     if (node == null) return null
     node.kind() match
@@ -88,15 +88,15 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
            SyntaxKind.GENERIC_NAME_EXPRESSION |
            SyntaxKind.OPTION_NAME_EXPRESSION =>
         if (context.containsParam(node.name)) return context.getParameter(node.name)
-        if (!context.containsClass(node.name) && code == 0) {
-          context.add(node.name, EmptyTypeSymbol(node.name))
+        if (!context.containsClass(node.name) && launch == ZERO) {
+          context.add(node.name, null)
           println("Type could be not declared below! Please check this!")
           // TODO: Check it in the end
-        } else if ((!context.containsClass(node.name) && code == 2) || (context.containsEmpty(node.name) && code == 2)) {
+        } else if (!context.containsClass(node.name) || context.containsEmpty(node.name) && launch == SECOND) {
           parseResult.addDiagnostic(node.fullSpan(), 20, s"name: ${node.name}, node.kind: ${node.kind}")
-          context.add(node.name, EmptyTypeSymbol(node.name))
+          context.add(node.name, null)
         }
-        else if (code == 2) {
+        else if (launch == SECOND) {
           node.kind() match
             case SyntaxKind.GENERIC_NAME_EXPRESSION if context.getClass(node.name) != null =>
               context.setEnvironment(node.name)
@@ -125,7 +125,9 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
         functionSymbol.functionParameters = getFunctionParameters(node, functionSymbol)
         functionSymbol.functionLocals = getFunctionLocals(node, functionSymbol)
         functionSymbol
-      case SyntaxKind.VARIABLE_DEFINITION => MyVariableSymbol(
+      case SyntaxKind.VARIABLE_DEFINITION =>
+        checkString(node)
+        MyVariableSymbol(
         `type` = getNameExpression(node.`type`),
         owner = owner,
         kind = SymbolKind.FIELD,
@@ -161,13 +163,12 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
         result.append(MyVariableSymbol(
           `type` = context.getClass("Boolean"),
           owner = owner,
-          kind = node.expression.slot(3).symbolKind,
-          name = node.expression.slot(3).name,
-          definition = node.expression.slot(3) // TODO:
+          kind = node.expression.expressionIsIdentifier.symbolKind,
+          name = node.expression.expressionIsIdentifier.name,
+          definition = node.expression.expressionIsIdentifier
         ))
       case _ => ListBuffer.empty
 
-  // x: Int
   def getParameterDefenition(node: SyntaxNode, owner: SemanticSymbol): VariableSymbol = MyVariableSymbol(
     `type` = getNameExpression(node.`type`),
     owner = owner,
@@ -189,24 +190,12 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
             .intersect(symbolFunctions.filter(!_.asInstanceOf[FunctionSymbol].isOverride)).nonEmpty
       case _ => false
 
-  //class Parent3<T <: Int>
-  //  var x: T
-  //
-  //  def bro(x: T): T
-  //    println("bro")
-  //    return x
-  //
-  //
-  //class X <: Parent3<Int> & Parent2
-  //  def pass()
-  //    return 4
 
 
-  //def f(x):
-  //    val array = List<int>(1, 2, 3, 4)
-  //    for y in array
-  //       val x = y + 1
-  //    return x is SomeClass
-  // FOR_STATEMENT
-  // FOR IDENTIFIER(x) IN IDENTIFIER_NAME_EXPRESSION(array)
+  def checkString(node: SyntaxNode): Unit =
+    if (node.expression != null)
+      node.expression.kind() match
+        case SyntaxKind.STRING_LITERAL_EXPRESSION if !context.containsEmpty("String") && !context.containsEmpty("Array") => parseResult.addDiagnostic(node.fullSpan(), 20, "String and Array")
+        case _ =>
+
 }

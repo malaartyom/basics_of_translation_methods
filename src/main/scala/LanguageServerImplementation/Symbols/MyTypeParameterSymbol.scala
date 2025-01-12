@@ -1,4 +1,4 @@
-package LanguageServerImplementation
+package LanguageServerImplementation.Symbols
 
 import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{SemanticSymbol, SymbolKind, TypeLikeSymbol, TypeParameterSymbol}
@@ -16,6 +16,6 @@ case class MyTypeParameterSymbol(
                                 )                           
   extends TypeParameterSymbol {
 
-  override def bounds(): util.List[_ <: TypeLikeSymbol] = typeParamBounds.asJava
+  override def bounds(): util.List[? <: TypeLikeSymbol] = typeParamBounds.asJava
   override def toString: String = name
 }

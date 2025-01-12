@@ -1,7 +1,7 @@
-package LanguageServerImplementation
+package LanguageServerImplementation.Symbols
 
 import syspro.tm.parser.SyntaxNode
-import syspro.tm.symbols.{FunctionSymbol, SemanticSymbol, SymbolKind, TypeLikeSymbol, VariableSymbol}
+import syspro.tm.symbols.*
 
 import java.util
 import scala.collection.mutable.ListBuffer
@@ -20,9 +20,9 @@ case class MyFunctionSymbol(isNative: Boolean,
                             definition: SyntaxNode
                            ) extends FunctionSymbol {
 
-  override def parameters(): util.List[_ <: VariableSymbol] = functionParameters.asJava
+  override def parameters(): util.List[? <: VariableSymbol] = functionParameters.asJava
 
-  override def locals(): util.List[_ <: VariableSymbol] = functionLocals.asJava
+  override def locals(): util.List[? <: VariableSymbol] = functionLocals.asJava
 
   override def toString: String = name
 

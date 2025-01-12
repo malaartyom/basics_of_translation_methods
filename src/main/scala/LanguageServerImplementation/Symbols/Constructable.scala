@@ -1,24 +1,25 @@
-package LanguageServerImplementation
+package LanguageServerImplementation.Symbols
 
 import LanguageServerImplementation.Context.{GenericEnvironment, TypeEnvironment}
+import LanguageServerImplementation.LaunchType.FIRST
+import LanguageServerImplementation.Symbols.MyTypeSymbol
+import LanguageServerImplementation.{Context, MySemanticModel}
+import LanguageServerImplementation.Utils.*
 import ParserImplementation.Parsing.{MyParseResult, MySyntaxNode}
+import syspro.tm.lexer.IdentifierToken
 import syspro.tm.parser.{SyntaxKind, SyntaxNode}
 import syspro.tm.symbols.{TypeLikeSymbol, TypeParameterSymbol, TypeSymbol}
 
 import java.util
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters.*
-import Utils.*
-import syspro.tm.lexer.IdentifierToken
 
 trait Constructable {
 
-  def constr(list: util.List[_ <: TypeLikeSymbol] , typeArgs: ListBuffer[TypeLikeSymbol], definition: SyntaxNode, `def`: TypeSymbol, types: TypeEnvironment): MyTypeSymbol = {
+  def construct(list: util.List[? <: TypeLikeSymbol], typeArgs: ListBuffer[TypeLikeSymbol], definition: SyntaxNode, `def`: TypeSymbol, types: TypeEnvironment): MyTypeSymbol = {
     val context = Context(types = types)
     context.push()
     val normalList = list.asScala
-
-
     if (normalList.length != typeArgs.length)
       throw RuntimeException(s"Different length of typeArgs ${typeArgs.length} and list ${normalList.length} def $definition ${`def`} ")
 
@@ -28,25 +29,16 @@ trait Constructable {
         case t: TypeSymbol => context.add(elem.name(), t)  // TODO: Может стоит проверить есть ли в контектсе уже этот элемент
         case p: TypeParameterSymbol => context.push(elem.name(), p)
         case _  if !context.containsClass(elem.name) => context.push(elem.name, _)
-        case _  if context.containsClass(elem.name) => ???
+        case _  if context.containsClass(elem.name) => println("")
       i += 1
     }
-    val rebuildNode = buildNewTree(definition, context)
-    val node = MySyntaxNode(definition.kind())
-    node.add(rebuildNode.slot(0))
-    node.add(rebuildNode.slot(1))
-    node.addFail(3)
-    node.add(rebuildNode.slot(5))
-    node.add(rebuildNode.slot(6))
-    node.add(rebuildNode.slot(7))
-    node.add(rebuildNode.slot(8))
+
+    val node = rebuildTypeDefinition(definition, context)
     val model = MySemanticModel.emptyModel
     model.context.push()
     context.add(node.name, null)
     model.update(context)
-//    model.types = model.types ++ types
-//    model.generics = model.generics ++ generics
-    model.code = 1
+    model.launch = FIRST
     val symbol = MyTypeSymbol(
       kind = node.symbolKind,
       name = node.name,
@@ -60,6 +52,19 @@ trait Constructable {
     model.context(symbol.name) = symbol
     model.context.pop()
     symbol
+  }
+
+  private def rebuildTypeDefinition(definition: SyntaxNode, context: Context): SyntaxNode = {
+    val rebuildNode = buildNewTree(definition, context)
+    val node = MySyntaxNode(definition.kind())
+    node.add(rebuildNode.slot(0))
+    node.add(rebuildNode.slot(1))
+    node.addFail(3)
+    node.add(rebuildNode.slot(5))
+    node.add(rebuildNode.slot(6))
+    node.add(rebuildNode.slot(7))
+    node.add(rebuildNode.slot(8))
+    node
   }
 
   private def buildNewTree(node: SyntaxNode, context: Context): SyntaxNode =

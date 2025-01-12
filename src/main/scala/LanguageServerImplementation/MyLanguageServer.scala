@@ -14,16 +14,16 @@ import scala.jdk.CollectionConverters.*
 import Utils.*
 
 class MyLanguageServer extends LanguageServer {
-  var nodes: mutable.HashMap[SyntaxNode, SemanticSymbol] = mutable.HashMap()
+  private var nodes: mutable.HashMap[SyntaxNode, SemanticSymbol] = mutable.HashMap()
 
 
-  def fillVariable(value: java.util.List[? <: VariableSymbol]): Unit =
+  private def fillVariable(value: java.util.List[? <: VariableSymbol]): Unit =
     value.asScala.foreach(x => {
       nodes += (x.definition() -> x)
     })
 
 
-  def fillMemeberNodes(memberDefinitions: java.util.List[? <: MemberSymbol]): Unit =
+  private def fillMemberNodes(memberDefinitions: java.util.List[? <: MemberSymbol]): Unit =
     memberDefinitions.asScala.foreach(x => {
       nodes += (x.definition() -> x)
       x match
@@ -34,26 +34,27 @@ class MyLanguageServer extends LanguageServer {
           nodes += (v.definition() -> v)
     })
 
-  def fillTypeArgsNodes(typeArguments: java.util.List[? <: TypeLikeSymbol]): Unit =
+  private def fillTypeArgsNodes(typeArguments: java.util.List[? <: TypeLikeSymbol]): Unit =
     typeArguments.asScala.foreach(x => {
       nodes += (x.definition() -> x)
 
     })
 
-  def fillParentNodes(parents: Seq[? <: TypeSymbol]): Unit =
+  private def fillParentNodes(parents: Seq[? <: TypeSymbol]): Unit =
     parents.foreach(x => {
-      nodes += (x.definition() -> x)
+      if (x != null)
+        nodes += (x.definition() -> x)
     })
 
-  def fillNodes(typeDefinitions: Seq[? <: TypeSymbol]): Unit =
+  private def fillNodes(typeDefinitions: Seq[? <: TypeSymbol]): Unit =
     typeDefinitions.foreach(x =>
       { nodes += (x.definition() -> x)
-        fillMemeberNodes(x.members())
+        fillMemberNodes(x.members())
         fillTypeArgsNodes(x.typeArguments())
         fillParentNodes(x.baseTypes().asScala.toSeq)
       })
 
-  def build(node: SyntaxNode): MySyntaxNode = {
+  private def build(node: SyntaxNode): MySyntaxNode = {
     if (node == null) return null
     val symbol = if (nodes.contains(node)) nodes(node) else null
     node match
@@ -63,17 +64,13 @@ class MyLanguageServer extends LanguageServer {
         my
       case _ => MySyntaxNode(var1 = node.kind(), var2 = node.token(), sym = symbol, children = node.children.map(build))
   }
-
-//  MySyntaxNodeWithSymbol(node = node,
-//    nodeSymbol = if (nodes.contains(node)) nodes(node) else null
-//    , children = node.children.map(build))
+  
 
   override def buildModel(s: String): SemanticModel =
     nodes = mutable.HashMap()
     val p = MyParser().parse(s)
     val semanticModel = MySemanticModel(p, p.root())
     fillNodes(semanticModel.typeDefinitions().asScala.toSeq)
-//    println(nodes)
     semanticModel.rootNode = build(p.root())
-    return semanticModel
+    semanticModel
 }  

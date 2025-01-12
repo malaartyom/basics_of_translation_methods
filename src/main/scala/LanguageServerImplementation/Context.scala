@@ -1,7 +1,9 @@
 package LanguageServerImplementation
 
 import LanguageServerImplementation.Context.{GenericEnvironment, TypeEnvironment}
+import LanguageServerImplementation.Symbols.{BaseTypeSymbol, MyTypeSymbol}
 import syspro.tm.symbols.{TypeParameterSymbol, TypeSymbol}
+import syspro.tm.symbols.SymbolKind.*
 
 import scala.annotation.targetName
 import scala.collection.mutable
@@ -58,7 +60,7 @@ class Context(
     if (genericContexts.isEmpty) return false
     genericContexts.top.contains(key)
 
-  def containsEmpty(key: String): Boolean = types.contains(key) && types(key).isInstanceOf[EmptyTypeSymbol]
+  def containsEmpty(key: String): Boolean = types.contains(key) && types(key) == null
 
   def add(key: String, value: TypeSymbol): Unit = types += (key -> value)
 
@@ -67,9 +69,9 @@ class Context(
       case tp: TypeSymbol => types(key) = tp
       case tps: TypeParameterSymbol => push(key, tps)
 
-  def updateTypes(types: TypeEnvironment): Unit = this.types = this.types ++ types
+  private def updateTypes(types: TypeEnvironment): Unit = this.types = this.types ++ types
 
-  def updateParam(generics: GenericEnvironment): Unit = genericContexts.push(genericContexts.pop() ++ generics)
+  private def updateParam(generics: GenericEnvironment): Unit = genericContexts.push(genericContexts.pop() ++ generics)
 
   @targetName("+=")
   def +=(thatCtx: Context): Unit =

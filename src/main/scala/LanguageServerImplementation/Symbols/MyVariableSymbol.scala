@@ -1,4 +1,4 @@
-package LanguageServerImplementation
+package LanguageServerImplementation.Symbols
 
 import syspro.tm.parser.SyntaxNode
 import syspro.tm.symbols.{SemanticSymbol, SymbolKind, TypeLikeSymbol, VariableSymbol}

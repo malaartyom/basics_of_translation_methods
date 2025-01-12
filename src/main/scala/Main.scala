@@ -1,6 +1,7 @@
 package LexerImplementation
 
-import LanguageServerImplementation.{MyFunctionSymbol, MyLanguageServer}
+import LanguageServerImplementation.MyLanguageServer
+import LanguageServerImplementation.Symbols.MyFunctionSymbol
 import LexerImplementation.Processors.UnicodeProcessor
 import ParserImplementation.Parsing.MyParser
 import syspro.tm.{Tasks, WebServer}
@@ -31,10 +32,10 @@ object Main {
 //    WebServer.waitForWebServerExit()
 
 //    Tasks.addTestIncludeFilter("OperatorClass")
-    WebServer.start()
+//    WebServer.start()
     val server = MyLanguageServer()
     syspro.tm.Tasks.LanguageServer.registerSolution(server)
-    WebServer.waitForWebServerExit()
+//    WebServer.waitForWebServerExit()
 //    print(MyFunctionSymbol(isNative = false, isVirtual = false, isAbstract = false, isOverride = false, functionParameters = ListBuffer.empty, returnType = null, functionLocals = ListBuffer.empty, owner = null, kind = null, name = "bro", definition = null).isInstanceOf[FunctionSymbol])
   }
 
