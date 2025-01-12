@@ -195,7 +195,7 @@ class MySemanticModel(var parseResult: MyParseResult, var rootNode: SyntaxNode)
   def checkString(node: SyntaxNode): Unit =
     if (node.expression != null)
       node.expression.kind() match
-        case SyntaxKind.STRING_LITERAL_EXPRESSION if !context.containsEmpty("String") && !context.containsEmpty("Array") => parseResult.addDiagnostic(node.fullSpan(), 20, "String and Array")
+        case SyntaxKind.STRING_LITERAL_EXPRESSION if context.containsEmpty("String") && context.containsEmpty("Array") => parseResult.addDiagnostic(node.fullSpan(), 20, "String and Array")
         case _ =>
 
 }

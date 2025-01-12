@@ -321,7 +321,7 @@ class LanguageServerTest extends munit.FunSuite {
   test("String") {
     val s =
       """class Parent3<T <: Int64> <: X
-        |  var y: X
+        |  var y: X = "ABCD"
         |  def bro(x: T): String
         |    println("bro")
         |    return x
